@@ -45,8 +45,15 @@ export class ASLClassifier {
     let confidence = 0
 
     // Check each letter pattern
-    // O must come before C (O is tighter circle)
-    if (this.isLetterO(lm, fingerStates)) {
+    // V and W MUST come before O to avoid false detection
+    if (this.isLetterV(lm, fingerStates)) {
+      letter = 'V'
+      confidence = 0.95
+    } else if (this.isLetterW(lm, fingerStates)) {
+      letter = 'W'
+      confidence = 0.92
+    } else if (this.isLetterO(lm, fingerStates)) {
+      // O must come before C (O is tighter circle)
       letter = 'O'
       confidence = 1.0
     } else if (this.isLetterC(lm, fingerStates)) {
@@ -105,12 +112,6 @@ export class ASLClassifier {
       confidence = 0.88
     } else if (this.isLetterU(lm, fingerStates)) {
       letter = 'U'
-      confidence = 0.92
-    } else if (this.isLetterV(lm, fingerStates)) {
-      letter = 'V'
-      confidence = 0.95
-    } else if (this.isLetterW(lm, fingerStates)) {
-      letter = 'W'
       confidence = 0.92
     } else if (this.isLetterX(lm, fingerStates)) {
       letter = 'X'
@@ -278,7 +279,11 @@ export class ASLClassifier {
   }
 
   private isLetterO(lm: Landmark[], fingers: boolean[]): boolean {
-    // Tight circle with thumb and index
+    // Tight circle with thumb and index - all fingers should be curved (not extended)
+    // Make sure it's NOT V (2 fingers) or W (3 fingers) by checking fingers are down/curved
+    if (fingers[1] && fingers[2]) return false // Not V
+    if (fingers[1] && fingers[2] && fingers[3]) return false // Not W
+    
     const thumbIndexDist = this.distance(lm[4], lm[8])
     return thumbIndexDist >= 0.10 && thumbIndexDist < 0.40 // Tighter than C (was < 0.35)
   }
