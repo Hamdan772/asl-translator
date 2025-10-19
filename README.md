@@ -7,11 +7,20 @@
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10.8-green.svg)](https://mediapipe.dev/)
 [![OpenCV](https://img.shields.io/badge/OpenCV-4.8+-red.svg)](https://opencv.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14.0-black.svg)](https://nextjs.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 *Translate ASL hand signs into text in real-time using computer vision*
 
-[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Controls](#-controls) • [Demo](#-demo)
+[Features](#-features) • [Installation](#-installation) • [Web Version](#-web-version) • [Usage](#-usage) • [Demo](#-demo)
+
+---
+
+### 🌐 Try Online (No Installation Required!)
+
+**Live Web App:** https://web-1j5h4ycct-epokatrandomstuff-4004s-projects.vercel.app
+
+👉 Click the link above to use ASL Translator directly in your browser!
 
 ---
 
@@ -19,17 +28,23 @@
 
 ## 📋 Overview
 
-ASL Translator is a real-time hand gesture recognition system that translates American Sign Language (ASL) alphabet signs into text. Using MediaPipe's hand tracking and custom geometric pattern matching algorithms, it provides accurate letter recognition with visual feedback.
+ASL Translator is a real-time hand gesture recognition system that translates American Sign Language (ASL) alphabet signs into text. Available in **two versions**:
+
+1. **🖥️ Desktop App** (Python) - Full-featured application with recording, analytics, and practice mode
+2. **🌐 Web App** (Next.js) - Browser-based version, no installation required!
+
+Both versions use MediaPipe's hand tracking and custom geometric pattern matching algorithms for accurate letter recognition.
 
 ### ✨ Key Highlights
 
-- **🎯 High Accuracy**: Enhanced geometric pattern matching with multi-factor finger detection
+- **🎯 Ultra-lenient Detection**: Enhanced geometric pattern matching optimized for accuracy
 - **⚡ Real-time Processing**: Instant recognition with smooth video processing
+- **🌐 Web & Desktop**: Use in browser or as standalone application
 - **🎨 Visual Feedback**: Progress indicators, gesture timeline, and confidence scores
-- **🔊 Audio Feedback**: Optional sound effects for letter confirmation
-- **📊 Analytics**: Session statistics including speed and accuracy tracking
-- **🎮 Practice Mode**: Interactive learning mode with visual guides
-- **📹 Recording**: Save your translation sessions as videos
+- **🔊 Audio Feedback**: Optional sound effects for letter confirmation (desktop)
+- **📊 Analytics**: Session statistics including speed and accuracy tracking (desktop)
+- **🎮 Practice Mode**: Interactive learning mode with visual guides (desktop)
+- **📹 Recording**: Save your translation sessions as videos (desktop)
 
 ---
 
@@ -85,7 +100,46 @@ ASL Translator is a real-time hand gesture recognition system that translates Am
 
 ---
 
-## 📦 Installation
+## 🌐 Web Version
+
+### Try it Online!
+
+**Live Demo:** https://web-1j5h4ycct-epokatrandomstuff-4004s-projects.vercel.app
+
+No installation required - works directly in your browser!
+
+### Features
+
+- ✅ **24 ASL Letters** (A-Y, excluding J/Z)
+- ✅ **Real-time Detection** using MediaPipe Hands
+- ✅ **Beautiful UI** with modern design
+- ✅ **Mobile Friendly** - works on phones/tablets
+- ✅ **Privacy First** - all processing in browser
+- ✅ **Ultra-fast** - powered by Next.js & Vercel
+
+### How to Use (Web)
+
+1. Visit the live URL above
+2. Allow camera access when prompted
+3. Show the back of your hand to camera
+4. Form ASL letters (A-Y)
+5. Hold for 1 second to add letter
+6. Use buttons to add space, backspace, or clear
+
+### Tech Stack (Web)
+
+- Next.js 14.0.4 + TypeScript
+- MediaPipe Hands (browser version)
+- TensorFlow.js
+- Tailwind CSS
+- React Webcam
+- Deployed on Vercel
+
+📖 **Full web documentation:** [web/README.md](web/README.md)
+
+---
+
+## 📦 Installation (Desktop Version)
 
 ### Prerequisites
 
@@ -97,7 +151,7 @@ ASL Translator is a real-time hand gesture recognition system that translates Am
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/asl-translator.git
+   git clone https://github.com/Hamdan772/asl-translator.git
    cd asl-translator
    ```
 
@@ -127,7 +181,7 @@ numpy==1.26.2         # Numerical computations
 
 ---
 
-## 🎯 Usage
+## 🎯 Usage (Desktop Version)
 
 ### Quick Start
 
