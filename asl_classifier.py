@@ -196,7 +196,7 @@ class ASLClassifier:
         ring_angle = self.calculate_angle(ring_mcp[1:], ring_pip[1:], ring_tip[1:])
         
         # ========== IMPROVED LETTER RECOGNITION - MORE LENIENT ==========
-        # ========== CHECK V AND W FIRST - BEFORE B! ==========
+        # ========== CHECK V AND W FIRST - BEFORE O! ==========
         
         # W: Three fingers up (index, middle, ring) - CHECK FIRST!
         if fingers == [0, 1, 1, 1, 0]:
@@ -210,7 +210,7 @@ class ASLClassifier:
             # Very relaxed fallback
             return "W", 0.70
         
-        # V: Index and middle separated (peace sign) - CHECK SECOND BEFORE B!
+        # V: Index and middle separated (peace sign) - CHECK SECOND BEFORE O!
         if fingers == [0, 1, 1, 0, 0]:
             # Separated V shape - distance between tips (ULTRA LENIENT)
             if index_middle_norm > 0.22 and index_angle > 115 and middle_angle > 115:
@@ -222,7 +222,7 @@ class ASLClassifier:
             elif index_middle_norm > 0.08:
                 return "V", 0.70
         
-        # U: Index and middle together, pointing up - CHECK BEFORE B!
+        # U: Index and middle together, pointing up - CHECK BEFORE O!
         if fingers == [0, 1, 1, 0, 0]:
             # Very close together and straight (ULTRA RELAXED)
             if index_middle_norm < 0.75 and index_angle > 125 and middle_angle > 125:
@@ -255,10 +255,14 @@ class ASLClassifier:
             # Very relaxed
             return "B", 0.70
         
-        # O: Fingers and thumb form TIGHT circle - CHECK BEFORE C!
+        # O: Fingers and thumb form TIGHT circle - CHECK AFTER V/W TO AVOID FALSE POSITIVES!
         if fingers == [1, 0, 0, 0, 0] or sum(fingers[1:]) <= 1:
+            # Make sure it's NOT V or W by verifying fingers are actually down
+            if fingers == [0, 1, 1, 0, 0] or fingers == [0, 1, 1, 1, 0]:
+                # This is V or W, not O - skip
+                pass
             # O requires TIGHT circle - small gap between thumb and index (ULTRA RELAXED)
-            if thumb_index_norm < 0.80:  # More lenient tight circle
+            elif thumb_index_norm < 0.80:  # More lenient tight circle
                 return "O", 0.90
             elif thumb_index_norm < 0.52:  # Medium tight
                 return "O", 0.80
