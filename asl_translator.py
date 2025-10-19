@@ -162,32 +162,44 @@ class ASLTranslator:
         cv2.putText(img_out, "ASL LETTER GUIDE (Back of Hand View)", (80, 100), 
                    cv2.FONT_HERSHEY_DUPLEX, 1, self.color_primary, 2, cv2.LINE_AA)
         
-        # Instructions in columns
+        # Instructions in columns - ALL 24 SUPPORTED LETTERS
         letters = [
             ("A", "Fist, thumb on side"),
-            ("B", "All fingers up, together"),
+            ("B", "All 4 fingers up, together"),
             ("C", "Curved hand shape"),
             ("D", "Index up, thumb touches"),
-            ("E", "All fingers closed"),
-            ("F", "Thumb+index touch, others up"),
+            ("E", "Complete fist, all closed"),
+            ("F", "Thumb+index circle, others up"),
+            ("G", "Thumb+index sideways (gun)"),
+            ("H", "Index+middle horizontal"),
             ("I", "Pinky up only"),
-            ("L", "Thumb+index form L"),
+            ("K", "Index+middle+thumb up"),
+            ("L", "Thumb+index L shape"),
+            ("M", "Thumb under 3 fingers"),
+            ("N", "Thumb under 2 fingers"),
             ("O", "Fingers form circle"),
+            ("P", "Index down, middle out"),
+            ("Q", "Thumb+middle down"),
+            ("R", "Index+middle crossed"),
+            ("S", "Fist, thumb across front"),
+            ("T", "Thumb between fingers"),
             ("U", "Index+middle together, up"),
             ("V", "Index+middle apart (peace)"),
-            ("W", "Three fingers up"),
+            ("W", "Three fingers up, apart"),
+            ("X", "Index bent in hook"),
             ("Y", "Thumb+pinky out (shaka)"),
         ]
         
-        x_offset = 100
+        x_offset = 80
         y_offset = 150
-        col_width = 400
+        col_width = 360
+        row_height = 42
         
         for i, (letter, desc) in enumerate(letters):
-            col = i // 7
-            row = i % 7
+            col = i // 8  # 8 rows per column for better fit
+            row = i % 8
             x = x_offset + col * col_width
-            y = y_offset + row * 45
+            y = y_offset + row * row_height
             
             # Letter
             cv2.putText(img_out, letter, (x, y), 
@@ -197,7 +209,9 @@ class ASLTranslator:
             cv2.putText(img_out, f"- {desc}", (x + 40, y), 
                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, self.color_text, 1, cv2.LINE_AA)
         
-        # Footer
+        # Footer with note about missing letters
+        cv2.putText(img_out, "Note: J and Z require motion (not supported)", (w // 2 - 250, h - 110), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, (100, 100, 255), 1, cv2.LINE_AA)
         cv2.putText(img_out, "Press 'H' to close help", (w // 2 - 150, h - 80), 
                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, self.color_warning, 2, cv2.LINE_AA)
         
