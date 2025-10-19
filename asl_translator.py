@@ -282,7 +282,7 @@ class ASLTranslator:
             
             # Confidence fill
             fill_width = int(bar_width * confidence)
-            conf_color = self.color_primary if confidence > 0.60 else self.color_warning
+            conf_color = self.color_primary if confidence > 0.45 else self.color_warning
             cv2.rectangle(img, (bar_x, bar_y), (bar_x + fill_width, bar_y + bar_height), 
                          conf_color, -1)
             
@@ -546,7 +546,7 @@ class ASLTranslator:
             
             # Confidence fill
             fill_width = int(bar_width * confidence)
-            conf_color = self.color_primary if confidence > 0.60 else self.color_warning
+            conf_color = self.color_primary if confidence > 0.45 else self.color_warning
             cv2.rectangle(img, (bar_x, bar_y), (bar_x + fill_width, bar_y + bar_height), 
                          conf_color, -1)
             
@@ -778,22 +778,22 @@ class ASLTranslator:
                         confidence = min(confidence + stability_bonus, 1.0)
                     
                     # Show detections with lower threshold (VERY LENIENT)
-                    if current_letter and confidence > 0.55:  # Much more lenient (was 0.65)
+                    if current_letter and confidence > 0.40:  # Much more lenient (was 0.65)
                         stability_status = "stable" if self.detector.is_hand_stable else "moving"
                         print(f"👁️  Detected: {current_letter} (confidence: {confidence:.2f}, hand: {stability_status})")
                     
                     # Add to gesture timeline - lowered threshold (VERY LENIENT)
-                    if current_letter and confidence > 0.60:  # Much more lenient (was 0.70)
+                    if current_letter and confidence > 0.45:  # Much more lenient (was 0.70)
                         if not self.gesture_timeline or self.gesture_timeline[-1][0] != current_letter:
                             self.gesture_timeline.append((current_letter, confidence))
                             self.total_gestures_detected += 1
-                    elif confidence < 0.55:  # Lowered rejection threshold
+                    elif confidence < 0.40:  # Lowered rejection threshold
                         # Low confidence - ignore
                         current_letter = ""
                         confidence = 0.0
                 
                 # PRACTICE MODE: Check if detected letter matches target (MORE LENIENT)
-                if self.practice_mode and current_letter and confidence > 0.600:  # Lowered from 0.8
+                if self.practice_mode and current_letter and confidence > 0.450:  # Lowered from 0.8
                     if self.check_practice_letter(current_letter):
                         current_letter = ""  # Reset after successful match
                 

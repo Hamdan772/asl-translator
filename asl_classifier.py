@@ -76,7 +76,7 @@ class ASLClassifier:
         # Thumb is up if:
         # 1. Distance from palm is significantly greater than base distance
         # 2. Angle at IP joint shows extension (> 140 degrees = straight)
-        thumb_extended = (thumb_dist > thumb_base_dist * 1.10) or (thumb_angle > 120)  # VERY lenient
+        thumb_extended = (thumb_dist > thumb_base_dist * 1.05) or (thumb_angle > 110)  # ULTRA lenient
         fingers.append(1 if thumb_extended else 0)
         
         # OTHER FOUR FINGERS - Enhanced with angle and multi-factor checks (MORE LENIENT)
@@ -95,27 +95,27 @@ class ASLClassifier:
             pip_angle = self.calculate_angle(landmarks[mcp][1:], landmarks[pip][1:], landmarks[tip][1:])
             
             if is_back_of_hand:
-                # For back view: Multiple factor check (VERY LENIENT)
+                # For back view: Multiple factor check (ULTRA LENIENT)
                 # Factor 1: Tip is further from wrist than PIP
-                distance_check = tip_wrist_dist > pip_wrist_dist * 1.02  # Much more lenient
+                distance_check = tip_wrist_dist > pip_wrist_dist * 1.0  # Extremely lenient
                 
                 # Factor 2: Angle at PIP joint shows extension
-                angle_check = pip_angle > 120  # Much more lenient
+                angle_check = pip_angle > 110  # Extremely lenient
                 
                 # Factor 3: Tip y-coordinate (visual check)
                 y_check = landmarks[tip][2] < landmarks[mcp][2]
                 
-                # Finger is up if at least 2 of 3 checks pass
+                # Finger is up if ANY check passes (was 2 of 3)
                 checks_passed = sum([distance_check, angle_check, y_check])
-                fingers.append(1 if checks_passed >= 2 else 0)
+                fingers.append(1 if checks_passed >= 1 else 0)
             else:
-                # Standard palm view - improved (VERY LENIENT)
-                distance_check = tip_wrist_dist > pip_wrist_dist * 1.02  # Much more lenient
-                angle_check = pip_angle > 120  # Much more lenient
+                # Standard palm view - improved (ULTRA LENIENT)
+                distance_check = tip_wrist_dist > pip_wrist_dist * 1.0  # Extremely lenient
+                angle_check = pip_angle > 110  # Extremely lenient
                 y_check = landmarks[tip][2] < landmarks[pip][2]
                 
                 checks_passed = sum([distance_check, angle_check, y_check])
-                fingers.append(1 if checks_passed >= 2 else 0)
+                fingers.append(1 if checks_passed >= 1 else 0)
         
         return fingers
     
@@ -200,84 +200,93 @@ class ASLClassifier:
         
         # W: Three fingers up (index, middle, ring) - CHECK FIRST!
         if fingers == [0, 1, 1, 1, 0]:
-            # All three extended and separated
-            if index_angle > 125 and middle_angle > 125 and ring_angle > 125:
-                # Check finger spacing (VERY RELAXED)
-                if index_middle_norm > 0.15 and middle_ring_norm > 0.15:
+            # All three extended and separated (ULTRA RELAXED)
+            if index_angle > 115 and middle_angle > 115 and ring_angle > 115:
+                # Check finger spacing (ULTRA RELAXED)
+                if index_middle_norm > 0.10 and middle_ring_norm > 0.10:
                     return "W", 0.88
                 else:
                     return "W", 0.82
-            # Fallback for slightly bent fingers
-            return "W", 0.75
+            # Very relaxed fallback
+            return "W", 0.70
         
         # V: Index and middle separated (peace sign) - CHECK SECOND BEFORE B!
         if fingers == [0, 1, 1, 0, 0]:
             # Separated V shape - distance between tips (ULTRA LENIENT)
-            if index_middle_norm > 0.30 and index_angle > 130 and middle_angle > 130:
+            if index_middle_norm > 0.22 and index_angle > 115 and middle_angle > 115:
                 return "V", 0.90
             # Less strict V detection
-            elif index_middle_norm > 0.20 and index_angle > 125:
+            elif index_middle_norm > 0.12 and index_angle > 110:
                 return "V", 0.82
             # Very relaxed fallback
-            elif index_middle_norm > 0.15:
-                return "V", 0.75
+            elif index_middle_norm > 0.08:
+                return "V", 0.70
         
         # U: Index and middle together, pointing up - CHECK BEFORE B!
         if fingers == [0, 1, 1, 0, 0]:
-            # Very close together and straight (VERY RELAXED)
-            if index_middle_norm < 0.30 and index_angle > 140 and middle_angle > 140:
+            # Very close together and straight (ULTRA RELAXED)
+            if index_middle_norm < 0.75 and index_angle > 125 and middle_angle > 125:
                 return "U", 0.87
             # Medium closeness
-            elif index_middle_norm < 0.35 and index_angle > 130:
+            elif index_middle_norm < 0.75 and index_angle > 115:
                 return "U", 0.80
             # Relaxed fallback
-            elif index_middle_norm < 0.40:
-                return "U", 0.73
+            elif index_middle_norm < 0.75:
+                return "U", 0.68
         
         # A: Fist with thumb on side
         if fingers == [1, 0, 0, 0, 0]:
-            # Thumb extended, all fingers closed
-            # Check thumb is not touching index (VERY RELAXED)
-            if thumb_index_norm > 0.35:  # Much more lenient
+            # Thumb extended, all fingers closed (ULTRA RELAXED)
+            if thumb_index_norm > 0.25:  # Ultra lenient
                 return "A", 0.92
-            elif thumb_index_norm > 0.25:
-                return "A", 0.85
+            elif thumb_index_norm > 0.15:
+                return "A", 0.82
+            # Very relaxed fallback
+            return "A", 0.70
         
         # B: All four fingers extended together, thumb tucked - NOW CHECKED AFTER V/W!
         if fingers == [0, 1, 1, 1, 1]:
-            # Check fingers are close together (VERY RELAXED)
-            if index_middle_norm < 0.40 and middle_ring_norm < 0.40:  # Much more lenient
+            # Check fingers are close together (ULTRA RELAXED)
+            if index_middle_norm < 0.80 and middle_ring_norm < 0.80:  # Ultra lenient
                 return "B", 0.90
-            # Fallback for slightly separated fingers
-            elif index_middle_norm < 0.50:
-                return "B", 0.82
+            # Fallback for separated fingers
+            elif index_middle_norm < 0.75:
+                return "B", 0.80
+            # Very relaxed
+            return "B", 0.70
         
         # O: Fingers and thumb form TIGHT circle - CHECK BEFORE C!
         if fingers == [1, 0, 0, 0, 0] or sum(fingers[1:]) <= 1:
-            # O requires TIGHT circle - small gap between thumb and index
-            if thumb_index_norm < 0.35:  # Tight circle
+            # O requires TIGHT circle - small gap between thumb and index (ULTRA RELAXED)
+            if thumb_index_norm < 0.80:  # More lenient tight circle
                 return "O", 0.90
-            elif thumb_index_norm < 0.45:  # Medium tight
-                return "O", 0.82
+            elif thumb_index_norm < 0.52:  # Medium tight
+                return "O", 0.80
+            # Relaxed fallback
+            elif thumb_index_norm < 0.62:
+                return "O", 0.68
         
         # C: Curved hand shape (thumb and fingers form arc) - WIDER than O
         if fingers == [1, 0, 0, 0, 0] or sum(fingers[1:]) <= 1:
-            # C has WIDER gap than O (checked after O fails)
+            # C has WIDER gap than O (checked after O fails) (ULTRA RELAXED)
             thumb_wrist_dist = self.calculate_distance(thumb_tip[1:], wrist[1:])
             index_wrist_dist = self.calculate_distance(index_tip[1:], wrist[1:])
             avg_dist = (thumb_wrist_dist + index_wrist_dist) / 2
             
             # Check curvature and gap (MUST be wider than O threshold)
-            if 0.45 < thumb_index_norm < 1.2 and abs(thumb_wrist_dist - index_wrist_dist) / avg_dist < 0.5:
+            if 0.35 < thumb_index_norm < 1.3 and abs(thumb_wrist_dist - index_wrist_dist) / avg_dist < 0.6:
                 return "C", 0.85
             # Relaxed C with moderate gap
-            elif 0.35 < thumb_index_norm < 1.3 and abs(thumb_wrist_dist - index_wrist_dist) / avg_dist < 0.6:
-                return "C", 0.75
+            elif 0.25 < thumb_index_norm < 1.4 and abs(thumb_wrist_dist - index_wrist_dist) / avg_dist < 0.7:
+                return "C", 0.72
+            # Very relaxed fallback
+            elif 0.15 < thumb_index_norm < 1.5:
+                return "C", 0.62
         
         # D: Index up, thumb touches middle/ring, others closed
         if fingers == [1, 1, 0, 0, 0]:
             # Thumb should touch middle finger area (VERY RELAXED)
-            if thumb_middle_norm < 0.6 and index_angle > 130:  # Much more lenient
+            if thumb_middle_norm < 0.6 and index_angle > 115:  # Much more lenient
                 return "D", 0.85
             elif thumb_middle_norm < 0.7:
                 return "D", 0.78
@@ -296,7 +305,7 @@ class ASLClassifier:
         # F: OK sign - Index and thumb form circle, others up
         if fingers == [1, 0, 1, 1, 1]:
             # Thumb and index should be close (forming circle) (VERY RELAXED)
-            if thumb_index_norm < 0.5 and middle_angle > 130:  # Much more lenient
+            if thumb_index_norm < 0.5 and middle_angle > 115:  # Much more lenient
                 return "F", 0.87
             elif thumb_index_norm < 0.6:
                 return "F", 0.80
@@ -313,16 +322,16 @@ class ASLClassifier:
         # H: Index and middle extended horizontally, close together
         if fingers == [0, 1, 1, 0, 0]:
             # Fingers should be parallel and close (VERY RELAXED)
-            if index_middle_norm < 0.40 and abs(index_angle - middle_angle) < 40:  # Much more lenient
+            if index_middle_norm < 0.80 and abs(index_angle - middle_angle) < 40:  # Much more lenient
                 return "H", 0.85
-            elif index_middle_norm < 0.50:
+            elif index_middle_norm < 0.80:
                 return "H", 0.75
         
         # I: Only pinky extended (little finger up)
         if fingers == [0, 0, 0, 0, 1]:
             # Pinky clearly extended, others closed (VERY RELAXED)
             pinky_angle = self.calculate_angle(pinky_mcp[1:], pinky_pip[1:], pinky_tip[1:])
-            if pinky_angle > 130:  # Much more lenient
+            if pinky_angle > 115:  # Much more lenient
                 return "I", 0.92
             elif pinky_angle > 115:
                 return "I", 0.85
@@ -342,7 +351,7 @@ class ASLClassifier:
         if fingers == [1, 1, 0, 0, 0]:
             # Calculate angle between thumb and index (VERY RELAXED)
             ti_angle = abs(thumb_tip[1] - index_tip[1]) / abs(thumb_tip[2] - index_tip[2] + 0.001)
-            if ti_angle > 1.0 and index_angle > 130:  # Much more lenient
+            if ti_angle > 1.0 and index_angle > 115:  # Much more lenient
                 return "L", 0.87
             elif ti_angle > 0.8 and index_angle > 120:
                 return "L", 0.78
@@ -369,7 +378,7 @@ class ASLClassifier:
         # P: Index down, middle extended, forming inverted V
         if fingers == [1, 0, 1, 0, 0]:
             # Index bent down, middle pointing (VERY RELAXED)
-            if index_angle < 160 and middle_angle > 130:  # Much more lenient
+            if index_angle < 160 and middle_angle > 115:  # Much more lenient
                 return "P", 0.82
             elif middle_angle > 120:
                 return "P", 0.72
@@ -377,7 +386,7 @@ class ASLClassifier:
         # Q: Similar to P but thumb pointing down more
         if fingers == [1, 0, 1, 0, 0]:
             thumb_down = thumb_tip[2] > thumb_mcp[2]
-            if thumb_down and middle_angle > 130:  # Much more lenient
+            if thumb_down and middle_angle > 115:  # Much more lenient
                 return "Q", 0.78
             elif thumb_down and middle_angle > 115:
                 return "Q", 0.70
@@ -385,9 +394,9 @@ class ASLClassifier:
         # R: Index and middle crossed or very close
         if fingers == [0, 1, 1, 0, 0]:
             # Check crossing - tips should be very close (VERY RELAXED)
-            if index_middle_norm < 0.30 and abs(index_tip[1] - middle_tip[1]) < palm_width * 0.25:  # Much more lenient
+            if index_middle_norm < 0.80 and abs(index_tip[1] - middle_tip[1]) < palm_width * 0.25:  # Much more lenient
                 return "R", 0.80
-            elif index_middle_norm < 0.35 and abs(index_tip[1] - middle_tip[1]) < palm_width * 0.30:
+            elif index_middle_norm < 0.75 and abs(index_tip[1] - middle_tip[1]) < palm_width * 0.30:
                 return "R", 0.72
         
         # S: Fist with thumb across front
@@ -469,9 +478,9 @@ class ASLClassifier:
         # Add to history
         self.letter_history.append(letter)
         
-        if smoothing and len(self.letter_history) >= 2:
-            # Require consistency across multiple frames (MORE LENIENT)
-            recent = list(self.letter_history)[-7:]  # Last 7 frames (increased from 5)
+        if smoothing and len(self.letter_history) >= 1:
+            # Require consistency across multiple frames (ULTRA LENIENT)
+            recent = list(self.letter_history)[-7:]  # Last 7 frames
             
             # Count occurrences
             from collections import Counter
@@ -481,31 +490,31 @@ class ASLClassifier:
             if letter_counts:
                 most_common_letter, count = letter_counts.most_common(1)[0]
                 
-                # Enhanced confidence calculation (MORE LENIENT)
-                if most_common_letter != "" and count >= 2:  # Reduced from 3
+                # Enhanced confidence calculation (ULTRA LENIENT)
+                if most_common_letter != "" and count >= 1:  # Only need 1 frame!
                     if most_common_letter == self.stable_letter:
                         self.stable_count += 1
                     else:
                         self.stable_letter = most_common_letter
                         self.stable_count = 1
                     
-                    # Multi-factor confidence boost (IMPROVED)
+                    # Multi-factor confidence boost (ULTRA IMPROVED)
                     # Factor 1: Temporal consistency (how many frames show same letter)
-                    consistency_bonus = (count / 7.0) * 0.20  # Up to +20% (increased)
+                    consistency_bonus = (count / 7.0) * 0.30  # Up to +30% (increased)
                     
                     # Factor 2: Stability over time (how long we've seen this letter)
-                    stability_bonus = min(self.stable_count * 0.04, 0.20)  # Up to +20% (increased)
+                    stability_bonus = min(self.stable_count * 0.05, 0.30)  # Up to +30% (increased)
                     
-                    # Factor 3: Base confidence quality (MORE LENIENT)
-                    quality_multiplier = 1.0 if base_confidence > 0.70 else 0.9  # Lowered threshold
+                    # Factor 3: Base confidence quality (ULTRA LENIENT)
+                    quality_multiplier = 1.0 if base_confidence > 0.55 else 0.95  # Very low threshold
                     
-                    # Calculate final confidence (BOOSTED)
+                    # Calculate final confidence (ULTRA BOOSTED)
                     final_confidence = base_confidence + consistency_bonus + stability_bonus
                     final_confidence = min(final_confidence * quality_multiplier, 1.0)
                     
                     return self.stable_letter, final_confidence
                 else:
-                    # Not enough consistency, reduce confidence (MORE LENIENT)
-                    return letter, base_confidence * 0.8  # Increased from 0.7
+                    # Not enough consistency, reduce confidence (ULTRA LENIENT)
+                    return letter, base_confidence * 0.9  # Minimal penalty
         
         return letter, base_confidence
