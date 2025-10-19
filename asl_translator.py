@@ -787,6 +787,9 @@ class ASLTranslator:
                 current_time = time.time()
                 time_held = 0
                 
+                # Get image dimensions for cooldown display
+                h, w = img.shape[:2]
+                
                 # Check if we're still in cooldown period
                 time_since_last_letter = current_time - self.last_letter_added_time
                 in_cooldown = time_since_last_letter < self.letter_cooldown
