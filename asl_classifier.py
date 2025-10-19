@@ -252,19 +252,27 @@ class ASLClassifier:
             elif index_middle_norm < 0.50:
                 return "B", 0.82
         
-        # C: Curved hand shape (thumb and fingers form arc)
+        # O: Fingers and thumb form TIGHT circle - CHECK BEFORE C!
         if fingers == [1, 0, 0, 0, 0] or sum(fingers[1:]) <= 1:
-            # Check if hand forms C curve (ULTRA RELAXED)
+            # O requires TIGHT circle - small gap between thumb and index
+            if thumb_index_norm < 0.35:  # Tight circle
+                return "O", 0.90
+            elif thumb_index_norm < 0.45:  # Medium tight
+                return "O", 0.82
+        
+        # C: Curved hand shape (thumb and fingers form arc) - WIDER than O
+        if fingers == [1, 0, 0, 0, 0] or sum(fingers[1:]) <= 1:
+            # C has WIDER gap than O (checked after O fails)
             thumb_wrist_dist = self.calculate_distance(thumb_tip[1:], wrist[1:])
             index_wrist_dist = self.calculate_distance(index_tip[1:], wrist[1:])
             avg_dist = (thumb_wrist_dist + index_wrist_dist) / 2
             
-            # Check curvature and gap (ULTRA RELAXED)
-            if 0.20 < thumb_index_norm < 1.2 and abs(thumb_wrist_dist - index_wrist_dist) / avg_dist < 0.5:
-                return "C", 0.80
-            # Very relaxed fallback
-            elif 0.15 < thumb_index_norm < 1.3:
-                return "C", 0.70
+            # Check curvature and gap (MUST be wider than O threshold)
+            if 0.45 < thumb_index_norm < 1.2 and abs(thumb_wrist_dist - index_wrist_dist) / avg_dist < 0.5:
+                return "C", 0.85
+            # Relaxed C with moderate gap
+            elif 0.35 < thumb_index_norm < 1.3 and abs(thumb_wrist_dist - index_wrist_dist) / avg_dist < 0.6:
+                return "C", 0.75
         
         # D: Index up, thumb touches middle/ring, others closed
         if fingers == [1, 1, 0, 0, 0]:
@@ -356,13 +364,7 @@ class ASLClassifier:
             elif norm_dist(thumb_middle_mcp_dist) < 0.65:
                 return "N", 0.66
         
-        # O: Fingers and thumb form circle
-        if fingers == [1, 0, 0, 0, 0] or sum(fingers[1:]) <= 1:
-            # Check if tips form a circle (VERY RELAXED)
-            if thumb_index_norm < 0.45:  # Much more lenient
-                return "O", 0.87
-            elif thumb_index_norm < 0.55:
-                return "O", 0.78
+        # NOTE: O is checked earlier (before C) to prevent C from stealing O detections
         
         # P: Index down, middle extended, forming inverted V
         if fingers == [1, 0, 1, 0, 0]:
