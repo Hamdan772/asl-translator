@@ -1,61 +1,45 @@
-# 🤟 ASL Translator# 🤟 ASL Translator v2.0 + ML Learning<div align="center">
-
-
+# 🤟 ASL Translator v2.0 - Easy Training Mode
 
 <div align="center">
 
-
-
-[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)Real-time American Sign Language translator using computer vision and machine learning.# 🤟 ASL Translator
-
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10.8-green.svg)](https://mediapipe.dev/)
-
 [![OpenCV](https://img.shields.io/badge/OpenCV-4.8+-red.svg)](https://opencv.org/)
-
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
-## ✨ Features### Real-time American Sign Language Letter Recognition
 
 *Real-time American Sign Language translator using computer vision and machine learning*
 
-
-
-[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Documentation](#-documentation) • [ML Training](#-machine-learning)
-
-- **Real-time Recognition** - Translates ASL gestures to text instantly[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Training](#-ml-training) • [Documentation](#-documentation)
 
 </div>
 
-- **Machine Learning** - Learns from YOUR hand to improve accuracy[![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10.8-green.svg)](https://mediapipe.dev/)
+---
+
+## ⚠️ MODEL TRAINING IN PROGRESS
+
+> **Note**: This repository does not include pre-trained models. You must train the ML model with your own hand gestures for personalized accuracy.
+
+**Status**: Ready for fresh training  
+**Training Data**: Empty (`training_data.json`)  
+**Model Files**: Not included (generated after training)
+
+� **See [MODEL_STATUS.md](MODEL_STATUS.md) for training instructions**
 
 ---
 
-- **24 Letters** - Supports A-Y (excluding J which requires motion)[![OpenCV](https://img.shields.io/badge/OpenCV-4.8+-red.svg)](https://opencv.org/)
-
 ## 📋 Overview
-
-- **Hybrid System** - Combines geometric rules + neural network[![Next.js](https://img.shields.io/badge/Next.js-14.0-black.svg)](https://nextjs.org/)
 
 ASL Translator is a real-time hand gesture recognition system that translates American Sign Language (ASL) alphabet signs into text using MediaPipe hand tracking and machine learning.
 
-- **Practice Mode** - Interactive learning for beginners[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
 ### ✨ Key Features
 
-- **Recording** - Save your signing sessions
-
-- 🎯 **24 ASL Letters** - Recognizes A-Y (excluding J and Z which require motion)
-
-- 🧠 **Machine Learning** - Train the system to recognize YOUR hand for better accuracy*Translate ASL hand signs into text in real-time using computer vision*
-
+- 🤖 **Easy Training Mode** - Simplified training with letter keys + ENTER to capture
+- 🧠 **Machine Learning** - Train the system to recognize YOUR hand for better accuracy
 - ⚡ **Real-time Processing** - Instant recognition with smooth video processing
-
-- 🎓 **Practice Mode** - Interactive learning mode for beginners## 🚀 Quick Start
-
+- 🎯 **Bulk Training** - Automatic outlier removal for better model accuracy
+- 📊 **Visual Feedback** - On-screen ML status indicator and sample counter
+- 🎓 **Practice Mode** - Interactive learning mode for beginners
 - 📹 **Recording** - Save your signing sessions as videos
-
-- 📊 **Analytics** - Track speed, accuracy, and session statistics[Features](#-features) • [Installation](#-installation) • [Web Version](#-web-version) • [Usage](#-usage) • [Demo](#-demo)
-
 - 🔊 **Voice Output** - Optional text-to-speech for translated text
 
 ### Installation
