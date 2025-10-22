@@ -2,22 +2,38 @@
 ASL Translator - Main Application
 Translates hand signs to text in real-time using webcam
 Enhanced version with back-of-hand support and improved UI
+Optimized for fast startup and crash prevention
 """
 import cv2
 import time
 import numpy as np
 import os
+import sys
 from collections import deque
 from datetime import datetime
-from hand_detector import HandDetector
-from asl_classifier import ASLClassifier
+from typing import Optional, Tuple
+
+try:
+    from hand_detector import HandDetector
+    from asl_classifier import ASLClassifier
+except ImportError:
+    print("❌ Error: Could not import required modules")
+    print("Make sure you're running from the correct directory")
+    sys.exit(1)
+
+# Lazy import ML trainer (slow to load due to sklearn/scipy)
+MLTrainer = None
 
 
 class ASLTranslator:
     def __init__(self):
         """Initialize the ASL Translator with ENHANCED features"""
-        self.detector = HandDetector(max_hands=1, detection_con=0.8)
-        self.classifier = ASLClassifier()
+        try:
+            self.detector = HandDetector(max_hands=1, detection_con=0.8)
+            self.classifier = ASLClassifier()
+        except Exception as e:
+            print(f"❌ Failed to initialize: {e}")
+            raise
         
         # Text display variables
         self.current_text = ""
@@ -110,8 +126,41 @@ class ASLTranslator:
             'correction_count': 0,
             'avg_confidence': []
         }
+        
+        # ========== MACHINE LEARNING FEATURES ==========
+        # Initialize ML trainer for adaptive learning (lazy loaded)
+        self.ml_trainer = None
+        self.ml_trainer_loaded = False
+        
+        # Learning Mode (RE-ENABLED for real training)
+        self.learning_mode = False
+        self.current_training_letter = None  # Which letter we're currently training
+        self.training_count = {}  # Count samples per letter
+        self.learning_stage = 'capture'  # 'capture' or 'label'
+        self.captured_landmarks = None
+        self.learning_prompt = ""
+        self.ml_confidence_threshold = 0.70  # Use ML if confidence > 70%
+        self.ml_enabled = False  # ML needs to be trained first
     
 
+    def load_ml_trainer(self):
+        """Lazy load ML trainer (takes time due to sklearn/scipy imports)"""
+        if self.ml_trainer_loaded:
+            return True
+        
+        try:
+            print("🔄 Loading ML trainer (this may take a few seconds)...")
+            global MLTrainer
+            from ml_trainer import MLTrainer
+            self.ml_trainer = MLTrainer()
+            self.ml_trainer_loaded = True
+            self.ml_enabled = self.ml_trainer.model is not None
+            print("✅ ML trainer loaded successfully!")
+            return True
+        except Exception as e:
+            print(f"❌ Failed to load ML trainer: {e}")
+            return False
+    
     def play_sound(self, sound_type='letter'):
         """Play system sound for feedback"""
         if not self.audio_enabled:
@@ -226,6 +275,12 @@ class ASLTranslator:
         cv2.rectangle(overlay, (0, 0), (w, 80), self.color_bg, -1)
         cv2.addWeighted(overlay, 0.7, img, 0.3, 0, img)
         
+        # ML Status Indicator (top-left corner)
+        ml_status = "🤖 ML: ON" if self.ml_enabled else "⚠️  ML: OFF"
+        ml_color = (0, 255, 0) if self.ml_enabled else (0, 165, 255)
+        cv2.putText(img, ml_status, (20, 25), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, ml_color, 2, cv2.LINE_AA)
+        
         # Display translated text with better formatting
         text_display = self.current_text if self.current_text else "Start signing..."
         if len(text_display) > 50:
@@ -282,7 +337,7 @@ class ASLTranslator:
             
             # Confidence fill
             fill_width = int(bar_width * confidence)
-            conf_color = self.color_primary if confidence > 0.45 else self.color_warning
+            conf_color = self.color_primary if confidence > 0.60 else self.color_warning
             cv2.rectangle(img, (bar_x, bar_y), (bar_x + fill_width, bar_y + bar_height), 
                          conf_color, -1)
             
@@ -546,7 +601,7 @@ class ASLTranslator:
             
             # Confidence fill
             fill_width = int(bar_width * confidence)
-            conf_color = self.color_primary if confidence > 0.45 else self.color_warning
+            conf_color = self.color_primary if confidence > 0.60 else self.color_warning
             cv2.rectangle(img, (bar_x, bar_y), (bar_x + fill_width, bar_y + bar_height), 
                          conf_color, -1)
             
@@ -656,7 +711,7 @@ class ASLTranslator:
         if detected_letter == self.target_letter:
             self.practice_score += 1
             self.practice_attempts += 1
-            self.play_sound('thumbs_up')
+            self.play_sound('letter')  # Changed from thumbs_up to generic letter sound
             print(f"✅ Correct! Score: {self.practice_score}/{self.practice_attempts}")
             # Move to next letter
             self.practice_index = (self.practice_index + 1) % len(self.practice_letters)
@@ -687,6 +742,50 @@ class ASLTranslator:
             except:
                 pass
     
+    def process_learning_label(self):
+        """Process user input for labeling captured gesture"""
+        if not self.captured_landmarks:
+            return False
+        
+        try:
+            # Get input from user (non-blocking would be better, but this works)
+            print("\n" + "=" * 60)
+            print("🧠 LEARNING MODE - Label Capture")
+            print("=" * 60)
+            label = input("Enter the letter (A-Z) this gesture represents: ").strip().upper()
+            
+            if len(label) == 1 and label.isalpha():
+                # Add to training data
+                success = self.ml_trainer.add_training_sample(self.captured_landmarks, label)
+                if success:
+                    print(f"✅ Training sample added for '{label}'!")
+                    print(f"📦 Total samples: {len(self.ml_trainer.training_data)}")
+                    
+                    # Show stats
+                    stats = self.ml_trainer.get_statistics()
+                    print(f"📊 Samples for '{label}': {stats.get(label, 0)}")
+                    
+                    # Suggest training if enough data
+                    if len(self.ml_trainer.training_data) >= 10:
+                        print("\n💡 TIP: You have enough data! Press 'M' to train the model")
+                    
+                    print("=" * 60)
+                    
+                    # Reset for next capture
+                    self.captured_landmarks = None
+                    self.learning_stage = 'capture'
+                    return True
+                else:
+                    print("❌ Failed to add training sample")
+                    return False
+            else:
+                print("❌ Invalid input. Please enter a single letter (A-Z)")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Error processing label: {e}")
+            return False
+    
     def run(self):
         """Main loop for the ASL translator with ENHANCED features"""
         # Initialize webcam
@@ -695,7 +794,7 @@ class ASLTranslator:
         cap.set(4, 720)   # Height
         
         print("=" * 60)
-        print("🚀 ASL Translator v2.0 - ULTIMATE EDITION")
+        print("🚀 ASL Translator v2.0 - ML EDITION")
         print("=" * 60)
         print("\n📹 Camera Mode: BACK OF HAND recognition")
         print("\n⌨️  Controls:")
@@ -704,11 +803,15 @@ class ASLTranslator:
         print("  • Press C to clear all text")
         print("  • Press H to show/hide help guide")
         print("  • Press S to show/hide statistics")
-        print("  • Press P to toggle practice mode")
-        print("  • Press R to start/stop recording")
-        print("  • Press V to toggle voice output")
-        print("  • Press A to add current word to dictionary")
+        print("  • Press 4 to toggle practice mode")
+        print("  • Press 5 to start/stop recording")
+        print("  • Press 6 to toggle voice output")
+        print("  • Press 7 to add current word to dictionary")
         print("  • Press 1-3 to accept word suggestions")
+        print("  • Press T to enter EASY TRAINING MODE")
+        print("  • Press M to train ML model")
+        print("  • Press B to BULK TRAIN (removes outliers)")
+        print("  • Press N to show ML statistics")
         print("  • Press ESC to save & quit | Q to quit without saving")
         print("\n✋ Usage:")
         print("  • Show the BACK of your hand to the camera")
@@ -742,34 +845,60 @@ class ASLTranslator:
                 
                 # Check for wave gesture
                 wave_detected = False
-                thumbs_gesture = ""
                 current_time = time.time()
-                
-                if landmarks:
-                    # Check for thumbs up/down
-                    thumbs_gesture = self.detector.detect_thumbs_gesture(landmarks)
-                    if thumbs_gesture == 'THUMBS_UP':
-                        self.play_sound('thumbs_up')
-                        print("👍 Thumbs up detected!")
-                    elif thumbs_gesture == 'THUMBS_DOWN':
-                        self.play_sound('thumbs_down')
-                        print("👎 Thumbs down detected!")
                 
                 # Check if back of hand
                 is_back_of_hand = self.detector.is_back_of_hand(landmarks) if landmarks else False
+                
+                # ========== LEARNING MODE LOGIC (SIMPLIFIED) ==========
+                if self.learning_mode and landmarks:
+                    # Show training UI
+                    h_learn, w_learn = img.shape[:2]
+                    
+                    if self.current_training_letter:
+                        # Currently training a specific letter
+                        count = self.training_count.get(self.current_training_letter, 0)
+                        
+                        # Show training info
+                        cv2.rectangle(img, (10, 10), (w_learn - 10, 180), (0, 100, 200), -1)
+                        cv2.putText(img, f"TRAINING: {self.current_training_letter}", (w_learn//2 - 150, 50),
+                                   cv2.FONT_HERSHEY_DUPLEX, 1.5, (255, 255, 255), 3, cv2.LINE_AA)
+                        cv2.putText(img, f"Samples collected: {count}", (w_learn//2 - 150, 100),
+                                   cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2, cv2.LINE_AA)
+                        
+                        if self.detector.is_hand_stable:
+                            cv2.putText(img, "Press ENTER to capture this gesture!", (w_learn//2 - 250, 150),
+                                       cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2, cv2.LINE_AA)
+                        else:
+                            cv2.putText(img, "Hold STILL to capture...", (w_learn//2 - 200, 150),
+                                       cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 165, 255), 2, cv2.LINE_AA)
+                    else:
+                        # No letter selected yet
+                        cv2.rectangle(img, (10, 10), (w_learn - 10, 180), (100, 0, 100), -1)
+                        cv2.putText(img, "LEARNING MODE ACTIVE", (w_learn//2 - 200, 50),
+                                   cv2.FONT_HERSHEY_DUPLEX, 1.2, (0, 255, 255), 2, cv2.LINE_AA)
+                        cv2.putText(img, "Press any letter key (A-Z) to start training", (w_learn//2 - 300, 100),
+                                   cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
+                        cv2.putText(img, "Then press ENTER to capture each sample", (w_learn//2 - 280, 150),
+                                   cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
                 
                 # Classify letter if hand detected
                 # Note: Stability check is now more lenient (15% threshold)
                 current_letter = ""
                 confidence = 0.0
+                ml_prediction = None
+                ml_confidence = 0.0
                 
-                if landmarks:  # Removed strict stability requirement
-                    # Classify the gesture
-                    current_letter, confidence = self.classifier.get_prediction(
-                        landmarks, 
-                        is_back_of_hand=is_back_of_hand,
-                        smoothing=True
-                    )
+                if landmarks and not self.learning_mode:  # Skip in learning mode
+                    # ONLY use ML prediction - no rule-based classifier
+                    if self.ml_enabled and self.ml_trainer:
+                        ml_prediction, ml_confidence = self.ml_trainer.predict(landmarks)
+                        if ml_confidence > self.ml_confidence_threshold:
+                            current_letter = ml_prediction
+                            confidence = ml_confidence
+                            print(f"🤖 ML prediction: {ml_prediction} ({ml_confidence:.2%})")
+                    # If no ML model trained, no letters will be detected
+                    
                     self.last_confidence = confidence
                     
                     # Boost confidence if hand is stable
@@ -777,23 +906,23 @@ class ASLTranslator:
                         stability_bonus = 0.05
                         confidence = min(confidence + stability_bonus, 1.0)
                     
-                    # Show detections with lower threshold (VERY LENIENT)
-                    if current_letter and confidence > 0.40:  # Much more lenient (was 0.65)
+                    # Show detections with STRICT threshold
+                    if current_letter and confidence > 0.65:  # STRICT: Only show high confidence
                         stability_status = "stable" if self.detector.is_hand_stable else "moving"
                         print(f"👁️  Detected: {current_letter} (confidence: {confidence:.2f}, hand: {stability_status})")
                     
-                    # Add to gesture timeline - lowered threshold (VERY LENIENT)
-                    if current_letter and confidence > 0.45:  # Much more lenient (was 0.70)
+                    # Add to gesture timeline - STRICT threshold
+                    if current_letter and confidence > 0.60:  # STRICT: High confidence for timeline
                         if not self.gesture_timeline or self.gesture_timeline[-1][0] != current_letter:
                             self.gesture_timeline.append((current_letter, confidence))
                             self.total_gestures_detected += 1
-                    elif confidence < 0.40:  # Lowered rejection threshold
+                    elif confidence < 0.65:  # STRICT: Reject low confidence
                         # Low confidence - ignore
                         current_letter = ""
                         confidence = 0.0
                 
-                # PRACTICE MODE: Check if detected letter matches target (MORE LENIENT)
-                if self.practice_mode and current_letter and confidence > 0.450:  # Lowered from 0.8
+                # PRACTICE MODE: Check if detected letter matches target (STRICT)
+                if self.practice_mode and current_letter and confidence > 0.75:  # STRICT: High confidence required
                     if self.check_practice_letter(current_letter):
                         current_letter = ""  # Reset after successful match
                 
@@ -956,36 +1085,36 @@ class ASLTranslator:
                             words[-1] = suggestions[suggestion_idx]
                             self.current_text = " ".join(words) + " "
                             print(f"✨ Accepted suggestion: {suggestions[suggestion_idx]}")
-                elif key == ord('p') or key == ord('P'):
-                    # Toggle practice mode
+                elif key == ord('4'):
+                    # Toggle practice mode (was P)
                     self.practice_mode = not self.practice_mode
                     if self.practice_mode:
                         self.target_letter = self.practice_letters[self.practice_index]
                         print(f"📚 Practice mode ON - Target letter: {self.target_letter}")
                     else:
                         print(f"📚 Practice mode OFF - Final score: {self.practice_score}/{self.practice_attempts}")
-                elif key == ord('r') or key == ord('R'):
-                    # Toggle recording
+                elif key == ord('5'):
+                    # Toggle recording (was R)
                     if not self.recording:
                         h, w = img.shape[:2]
                         self.start_recording(w, h)
                     else:
                         self.stop_recording()
-                elif key == ord('v') or key == ord('V'):
-                    # Toggle voice output
+                elif key == ord('6'):
+                    # Toggle voice output (was V)
                     self.voice_enabled = not self.voice_enabled
                     status = "ON" if self.voice_enabled else "OFF"
                     print(f"🔊 Voice output: {status}")
                     if self.voice_enabled and self.current_text:
                         self.speak_text(self.current_text)
-                elif key == ord('a') or key == ord('A'):
-                    # Add last word to custom dictionary
+                elif key == ord('7'):
+                    # Add last word to custom dictionary (was A)
                     words = self.current_text.strip().split()
                     if words:
                         last_word = words[-1]
                         self.add_custom_word(last_word)
-                elif key == ord('g') or key == ord('G'):
-                    # Show gamification stats
+                elif key == ord('8'):
+                    # Show gamification stats (was G)
                     print("\n" + "=" * 60)
                     print("🎮 GAMIFICATION STATS")
                     print("=" * 60)
@@ -996,13 +1125,150 @@ class ASLTranslator:
                     if self.gamification['achievements']:
                         print(f"Unlocked: {', '.join(self.gamification['achievements'])}")
                     print("=" * 60)
+                # Learning mode (Press 'T') - SIMPLIFIED TRAINING
+                elif key == ord('t') or key == ord('T'):
+                    self.learning_mode = not self.learning_mode
+                    if not self.learning_mode:
+                        self.current_training_letter = None
+                        print("\n❌ Learning mode deactivated")
+                        print("💡 Press T again to re-enter learning mode")
+                    else:
+                        print("\n" + "=" * 60)
+                        print("🎓 LEARNING MODE ACTIVATED")
+                        print("=" * 60)
+                        print("📝 Instructions:")
+                        print("  1. Press any letter key (A-Z) to select what to train")
+                        print("  2. Make the ASL sign and hold it steady")
+                        print("  3. Press ENTER repeatedly to capture 15-20 samples")
+                        print("  4. Press DIFFERENT letter keys to train more letters")
+                        print("  5. Press M or B when done to train the model")
+                        print("  6. Press T to exit learning mode")
+                        print("\n💡 TIP: Stay in learning mode! Just press different")
+                        print("   letter keys to switch between training letters.")
+                        print("=" * 60)
+                
+                # Train ML model (Press 'M') - Check BEFORE letter key handling
+                elif key == ord('m') or key == ord('M'):
+                    print("\n🧠 Training ML model...")
+                    if self.load_ml_trainer():
+                        accuracy = self.ml_trainer.train_model()
+                        if accuracy:
+                            self.ml_enabled = True
+                            self.learning_mode = False  # Exit learning mode
+                            self.current_training_letter = None
+                            print(f"✅ Model trained! Accuracy: {accuracy:.2%}")
+                            print("🎉 ML model is now ACTIVE and ready to use!")
+                            print("💡 Make ASL gestures and the model will recognize them!")
+                        else:
+                            print("❌ Training failed - need more samples")
+                            print("💡 TIP: Capture at least 10 samples for 2+ different letters")
+                
+                # Bulk train with outlier removal (Press 'B') - Check BEFORE letter key handling
+                elif key == ord('b') or key == ord('B'):
+                    print("\n🚀 BULK TRAINING with outlier removal...")
+                    if self.load_ml_trainer():
+                        result = self.ml_trainer.bulk_train_with_outlier_removal()
+                        # Result is a tuple (accuracy, outliers_dict)
+                        if result and result[0]:  # Check if accuracy is not None
+                            accuracy, outliers = result
+                            self.ml_enabled = True
+                            self.learning_mode = False  # Exit learning mode
+                            self.current_training_letter = None
+                            print(f"✅ Model trained! Accuracy: {accuracy:.2%}")
+                            print("🎉 ML model is now ACTIVE and ready to use!")
+                            print("💡 Make ASL gestures and the model will recognize them!")
+                        else:
+                            print("❌ Training failed - need more samples")
+                            print("💡 TIP: Capture at least 10 samples for 2+ different letters")
+                
+                # Handle letter key presses in learning mode (AFTER M and B check)
+                elif self.learning_mode and 97 <= key <= 122:  # a-z
+                    letter = chr(key).upper()
+                    self.current_training_letter = letter
+                    count = self.training_count.get(letter, 0)
+                    print(f"\n🎯 Now training letter: {letter} (Current samples: {count})")
+                    print("💡 Make the gesture and press ENTER to capture")
+                
+                elif self.learning_mode and 65 <= key <= 90:  # A-Z
+                    letter = chr(key)
+                    self.current_training_letter = letter
+                    count = self.training_count.get(letter, 0)
+                    print(f"\n🎯 Now training letter: {letter} (Current samples: {count})")
+                    print("💡 Make the gesture and press ENTER to capture")
+                
+                # Warning if letter key pressed while NOT in learning mode (AFTER M and B check)
+                elif not self.learning_mode and (97 <= key <= 122 or 65 <= key <= 90):
+                    letter = chr(key).upper() if 97 <= key <= 122 else chr(key)
+                    # Don't warn for M or B since they're training commands
+                    if letter not in ['M', 'B']:
+                        print(f"\n⚠️  Letter '{letter}' pressed but NOT in training mode!")
+                        print("💡 Press T to enter LEARNING MODE first")
+                
+                # Handle ENTER key to capture gesture in learning mode
+                elif self.learning_mode and key == 13 and self.current_training_letter:  # ENTER key
+                    if landmarks and self.detector.is_hand_stable:
+                        # Load ML trainer if needed
+                        if not self.ml_trainer_loaded:
+                            self.load_ml_trainer()
+                        
+                        if self.ml_trainer_loaded:
+                            # Add training sample
+                            success = self.ml_trainer.add_training_sample(landmarks, self.current_training_letter)
+                            if success:
+                                if self.current_training_letter not in self.training_count:
+                                    self.training_count[self.current_training_letter] = 0
+                                self.training_count[self.current_training_letter] += 1
+                                count = self.training_count[self.current_training_letter]
+                                print(f"✅ Captured! {self.current_training_letter}: {count} samples")
+                                self.play_sound('success')
+                                
+                                # Suggest when to train
+                                if count == 15:
+                                    print("💡 TIP: You have 15 samples - good time to train! Press M or B")
+                            else:
+                                print("❌ Failed to save sample")
+                    else:
+                        if not landmarks:
+                            print("⚠️  No hand detected! Show your hand to the camera")
+                        else:
+                            print("⚠️  Hand not stable! Hold still and try again")
+                
+                elif key == ord('n') or key == ord('N'):
+                    # Show ML training statistics
+                    if not self.ml_trainer_loaded:
+                        if not self.load_ml_trainer():
+                            print("❌ Cannot show stats - ML trainer failed to load")
+                            continue
+                    
+                    print("\n" + "=" * 60)
+                    print("📊 ML TRAINING STATISTICS")
+                    print("=" * 60)
+                    stats = self.ml_trainer.get_statistics()
+                    if stats:
+                        print("Samples per letter:")
+                        for letter, count in sorted(stats.items()):
+                            bar = "█" * min(count, 50)
+                            print(f"   {letter}: {count:3d} {bar}")
+                        print(f"\n📦 Total samples: {len(self.ml_trainer.training_data)}")
+                        print(f"🤖 ML enabled: {self.ml_enabled}")
+                        if self.ml_trainer.model:
+                            print("✅ Model trained and ready")
+                        else:
+                            print("⚠️  Model not trained yet (press 'M' to train)")
+                    else:
+                        print("📦 No training data collected yet")
+                        print("💡 Press 'T' to enter learning mode and capture gestures")
+                    print("=" * 60)
         
         # Cleanup
-        if self.recording:
-            self.stop_recording()
-        
-        cap.release()
-        cv2.destroyAllWindows()
+        try:
+            if self.recording:
+                self.stop_recording()
+            
+            cap.release()
+            cv2.destroyAllWindows()
+        except Exception as e:
+            print(f"⚠️  Cleanup warning: {e}")
         
         # Final statistics
         print(f"\n✨ Session complete!")
@@ -1021,9 +1287,24 @@ class ASLTranslator:
 
 
 def main():
-    """Entry point for the application"""
-    translator = ASLTranslator()
-    translator.run()
+    """Entry point for the application with error handling"""
+    try:
+        translator = ASLTranslator()
+        translator.run()
+    except KeyboardInterrupt:
+        print("\n\n👋 Interrupted by user. Goodbye!")
+        sys.exit(0)
+    except Exception as e:
+        print(f"\n❌ Fatal error: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
+    finally:
+        # Ensure cleanup
+        try:
+            cv2.destroyAllWindows()
+        except:
+            pass
 
 
 if __name__ == "__main__":

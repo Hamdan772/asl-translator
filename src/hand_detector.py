@@ -55,12 +55,6 @@ class HandDetector:
         self.wave_cooldown = 3.0  # Seconds between wave detections
         self.last_wave_time = 0
         
-        # Thumbs up/down detection
-        self.hand_y_history = deque(maxlen=10)  # Track vertical position
-        self.last_thumbs_gesture = ""
-        self.thumbs_cooldown = 2.0
-        self.last_thumbs_time = 0
-        
     def find_hands(self, img, draw=True):
         """
         Find hands in the image
@@ -78,8 +72,9 @@ class HandDetector:
         
         # Draw landmarks if hands detected
         if self.results.multi_hand_landmarks and draw:
+            h, w, c = img.shape
             for hand_landmarks in self.results.multi_hand_landmarks:
-                # Custom drawing with better visibility
+                # Draw the base landmarks and connections
                 self.mp_draw.draw_landmarks(
                     img, 
                     hand_landmarks, 
@@ -87,6 +82,24 @@ class HandDetector:
                     self.mp_draw.DrawingSpec(color=(0, 255, 0), thickness=2, circle_radius=3),
                     self.mp_draw.DrawingSpec(color=(0, 255, 255), thickness=2, circle_radius=2)
                 )
+                
+                # ADD MORE DOTS: Draw intermediate dots along each connection
+                for connection in self.mp_hands.HAND_CONNECTIONS:
+                    start_idx = connection[0]
+                    end_idx = connection[1]
+                    
+                    start_landmark = hand_landmarks.landmark[start_idx]
+                    end_landmark = hand_landmarks.landmark[end_idx]
+                    
+                    start_x, start_y = int(start_landmark.x * w), int(start_landmark.y * h)
+                    end_x, end_y = int(end_landmark.x * w), int(end_landmark.y * h)
+                    
+                    # Draw 3 intermediate dots along each connection line
+                    for i in range(1, 4):
+                        t = i / 4.0  # Position along the line (0.25, 0.5, 0.75)
+                        mid_x = int(start_x + (end_x - start_x) * t)
+                        mid_y = int(start_y + (end_y - start_y) * t)
+                        cv2.circle(img, (mid_x, mid_y), 2, (0, 200, 255), -1)  # Small cyan dots
         
         return img
     
@@ -197,74 +210,6 @@ class HandDetector:
             self.hand_x_history.clear()  # Clear for next detection
         
         return is_waving
-    
-    def detect_thumbs_gesture(self, landmarks):
-        """
-        Detect thumbs up or thumbs down gesture
-        
-        Args:
-            landmarks: List of landmarks [[id, x, y], ...]
-            
-        Returns:
-            'THUMBS_UP', 'THUMBS_DOWN', or ''
-        """
-        if len(landmarks) < 21:
-            return ""
-        
-        # Check cooldown
-        current_time = time.time()
-        if current_time - self.last_thumbs_time < self.thumbs_cooldown:
-            return ""
-        
-        # Get key points
-        thumb_tip = landmarks[4]
-        thumb_ip = landmarks[3]
-        thumb_mcp = landmarks[2]
-        index_mcp = landmarks[5]
-        middle_mcp = landmarks[9]
-        ring_mcp = landmarks[13]
-        pinky_mcp = landmarks[17]
-        wrist = landmarks[0]
-        
-        # Check if other fingers are closed (thumb gesture)
-        index_tip = landmarks[8]
-        middle_tip = landmarks[12]
-        ring_tip = landmarks[16]
-        pinky_tip = landmarks[20]
-        
-        # Fingers should be bent (tips below MCPs)
-        fingers_closed = (
-            index_tip[2] > index_mcp[2] and
-            middle_tip[2] > middle_mcp[2] and
-            ring_tip[2] > ring_mcp[2] and
-            pinky_tip[2] > pinky_mcp[2]
-        )
-        
-        if not fingers_closed:
-            return ""
-        
-        # Check thumb orientation
-        # Thumbs up: thumb tip is above wrist and extended upward
-        # Thumbs down: thumb tip is below wrist and extended downward
-        
-        thumb_extended = abs(thumb_tip[1] - wrist[1]) > 60  # Thumb out to side
-        
-        if thumb_extended:
-            # Check vertical position
-            thumb_wrist_vertical = thumb_tip[2] - wrist[2]
-            
-            if thumb_wrist_vertical < -100:  # Thumb significantly above wrist
-                gesture = 'THUMBS_UP'
-            elif thumb_wrist_vertical > 50:  # Thumb below wrist
-                gesture = 'THUMBS_DOWN'
-            else:
-                return ""
-            
-            self.last_thumbs_time = current_time
-            self.last_thumbs_gesture = gesture
-            return gesture
-        
-        return ""
     
     def find_position(self, img, hand_no=0, smooth=True):
         """

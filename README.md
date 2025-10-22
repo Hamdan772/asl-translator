@@ -1,180 +1,670 @@
+# 🤟 ASL Translator# 🤟 ASL Translator v2.0 + ML Learning<div align="center">
+
+
+
 <div align="center">
 
-# 🤟 ASL Translator
 
-### Real-time American Sign Language Letter Recognition
 
-[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)Real-time American Sign Language translator using computer vision and machine learning.# 🤟 ASL Translator
+
 [![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10.8-green.svg)](https://mediapipe.dev/)
+
 [![OpenCV](https://img.shields.io/badge/OpenCV-4.8+-red.svg)](https://opencv.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-14.0-black.svg)](https://nextjs.org/)
+
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-*Translate ASL hand signs into text in real-time using computer vision*
+## ✨ Features### Real-time American Sign Language Letter Recognition
 
-[Features](#-features) • [Installation](#-installation) • [Web Version](#-web-version) • [Usage](#-usage) • [Demo](#-demo)
+*Real-time American Sign Language translator using computer vision and machine learning*
 
----
 
-### 🌐 Try Online (No Installation Required!)
 
-**Live Web App:** https://web-1j5h4ycct-epokatrandomstuff-4004s-projects.vercel.app
+[Features](#-features) • [Installation](#-installation) • [Usage](#-usage) • [Documentation](#-documentation) • [ML Training](#-machine-learning)
 
-👉 Click the link above to use ASL Translator directly in your browser!
-
----
+- **Real-time Recognition** - Translates ASL gestures to text instantly[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)
 
 </div>
 
-## 📋 Overview
-
-ASL Translator is a real-time hand gesture recognition system that translates American Sign Language (ASL) alphabet signs into text. Available in **two versions**:
-
-1. **🖥️ Desktop App** (Python) - Full-featured application with recording, analytics, and practice mode
-2. **🌐 Web App** (Next.js) - Browser-based version, no installation required!
-
-Both versions use MediaPipe's hand tracking and custom geometric pattern matching algorithms for accurate letter recognition.
-
-### ✨ Key Highlights
-
-- **🎯 Ultra-lenient Detection**: Enhanced geometric pattern matching optimized for accuracy
-- **⚡ Real-time Processing**: Instant recognition with smooth video processing
-- **🌐 Web & Desktop**: Use in browser or as standalone application
-- **🎨 Visual Feedback**: Progress indicators, gesture timeline, and confidence scores
-- **🔊 Audio Feedback**: Optional sound effects for letter confirmation (desktop)
-- **📊 Analytics**: Session statistics including speed and accuracy tracking (desktop)
-- **🎮 Practice Mode**: Interactive learning mode with visual guides (desktop)
-- **📹 Recording**: Save your translation sessions as videos (desktop)
+- **Machine Learning** - Learns from YOUR hand to improve accuracy[![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10.8-green.svg)](https://mediapipe.dev/)
 
 ---
 
-## 🚀 Features
+- **24 Letters** - Supports A-Y (excluding J which requires motion)[![OpenCV](https://img.shields.io/badge/OpenCV-4.8+-red.svg)](https://opencv.org/)
 
-### Core Recognition
+## 📋 Overview
 
-<table>
-<tr>
-<td width="50%">
+- **Hybrid System** - Combines geometric rules + neural network[![Next.js](https://img.shields.io/badge/Next.js-14.0-black.svg)](https://nextjs.org/)
 
-#### 🖐️ Hand Tracking
-- **MediaPipe Integration**: 21-point hand landmark detection
-- **Back-of-hand optimized**: Best results showing palm away from camera
-- **Scale-independent**: Works at various distances
-- **GPU accelerated**: Metal support on Apple Silicon
+ASL Translator is a real-time hand gesture recognition system that translates American Sign Language (ASL) alphabet signs into text using MediaPipe hand tracking and machine learning.
 
-</td>
-<td width="50%">
+- **Practice Mode** - Interactive learning for beginners[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-#### 🔤 Letter Recognition
-- **24 ASL Letters**: A-Z (excluding motion-based J & Z)
-- **Enhanced accuracy**: 85-95% recognition rate
-- **Multi-factor detection**: 3 checks per finger
-- **Angle calculations**: Precise joint measurements
+### ✨ Key Features
 
-</td>
-</tr>
-</table>
+- **Recording** - Save your signing sessions
 
-### User Interface
+- 🎯 **24 ASL Letters** - Recognizes A-Y (excluding J and Z which require motion)
 
-| Feature | Description |
-|---------|-------------|
-| **Live Video Feed** | Real-time webcam display with hand tracking overlay |
-| **Text Display** | Large, scrolling text showing translated letters |
-| **Progress Indicator** | Circular timer showing 1-second hold requirement |
-| **Gesture Timeline** | Visual history of last 15 detected gestures |
-| **Confidence Scores** | Color-coded feedback (🟢 High / 🟡 Medium / 🔴 Low) |
-| **Help Overlay** | Interactive ASL alphabet reference guide |
-| **Statistics Dashboard** | Real-time session metrics and performance data |
+- 🧠 **Machine Learning** - Train the system to recognize YOUR hand for better accuracy*Translate ASL hand signs into text in real-time using computer vision*
+
+- ⚡ **Real-time Processing** - Instant recognition with smooth video processing
+
+- 🎓 **Practice Mode** - Interactive learning mode for beginners## 🚀 Quick Start
+
+- 📹 **Recording** - Save your signing sessions as videos
+
+- 📊 **Analytics** - Track speed, accuracy, and session statistics[Features](#-features) • [Installation](#-installation) • [Web Version](#-web-version) • [Usage](#-usage) • [Demo](#-demo)
+
+- 🔊 **Voice Output** - Optional text-to-speech for translated text
+
+### Installation
+
+---
+
+---
+
+## 🚀 Quick Start
+
+```bash
+
+### Installation
+
+# Install dependencies### 🌐 Try Online (No Installation Required!)
+
+```bash
+
+# Clone the repositorypip install -r requirements.txt
+
+git clone https://github.com/Hamdan772/asl-translator.git
+
+cd asl-translator**Live Web App:** https://web-1j5h4ycct-epokatrandomstuff-4004s-projects.vercel.app
+
+
+
+# Install dependencies# Run the application
+
+pip install -r requirements.txt
+
+python main.py👉 Click the link above to use ASL Translator directly in your browser!
+
+# Run the application
+
+python main.py```
+
+```
+
+---
+
+### Requirements
+
+### Basic Usage
+
+- Python 3.11+
+
+- Webcam</div>
+
+- Dependencies: opencv-python, mediapipe, numpy, scikit-learn (optional)
+
+1. **Start** - Run `python main.py`
+
+---
+
+2. **Sign** - Show back of hand to camera## 📋 Overview
+
+## 🎮 Usage
+
+3. **Hold** - Keep gesture stable for 1 second
+
+### Basic Controls
+
+4. **Repeat** - Wait 1.5 seconds between lettersASL Translator is a real-time hand gesture recognition system that translates American Sign Language (ASL) alphabet signs into text. Available in **two versions**:
+
+| Key | Action | Description |
+
+|-----|--------|-------------|
+
+| **SPACE** | Add space | Insert a space in your text |
+
+| **BACKSPACE** | Delete | Remove last character |## 🎮 Keyboard Controls1. **🖥️ Desktop App** (Python) - Full-featured application with recording, analytics, and practice mode
+
+| **C** | Clear | Clear all text |
+
+| **H** | Help | Show/hide letter guide |2. **🌐 Web App** (Next.js) - Browser-based version, no installation required!
+
+| **ESC** | Save & Quit | Save session and exit |
+
+| **Q** | Quit | Exit without saving |### Essential Controls
+
+
+
+### Machine Learning Controls- **SPACE** - Add spaceBoth versions use MediaPipe's hand tracking and custom geometric pattern matching algorithms for accurate letter recognition.
+
+
+
+| Key | Action | Description |- **BACKSPACE** - Delete last character
+
+|-----|--------|-------------|
+
+| **T** | Learning Mode | Capture and label gestures |- **C** - Clear all text### ✨ Key Highlights
+
+| **M** | Quick Train | Train model (standard) |
+
+| **B** | Bulk Train | Train with outlier removal ⭐ |- **ESC** - Save and quit
+
+| **N** | Statistics | View training data stats |
+
+- **Q** - Quit without saving- **🎯 Ultra-lenient Detection**: Enhanced geometric pattern matching optimized for accuracy
 
 ### Advanced Features
 
+- **⚡ Real-time Processing**: Instant recognition with smooth video processing
+
+| Key | Action | Description |
+
+|-----|--------|-------------|### ML Learning (NEW!)- **🌐 Web & Desktop**: Use in browser or as standalone application
+
+| **P** | Practice Mode | Interactive learning exercises |
+
+| **R** | Recording | Start/stop video recording |- **T** - Enter learning mode (capture & label gestures)- **🎨 Visual Feedback**: Progress indicators, gesture timeline, and confidence scores
+
+| **V** | Voice | Toggle text-to-speech |
+
+| **S** | Statistics | Show/hide session stats |- **M** - Train ML model on captured data- **🔊 Audio Feedback**: Optional sound effects for letter confirmation (desktop)
+
+| **A** | Add Word | Save current word to dictionary |
+
+| **1-3** | Suggestions | Accept word suggestions |- **N** - Show training statistics- **📊 Analytics**: Session statistics including speed and accuracy tracking (desktop)
+
+
+
+---- **ENTER** - Submit letter label (in learning mode)- **🎮 Practice Mode**: Interactive learning mode with visual guides (desktop)
+
+
+
+## 🧠 Machine Learning- **📹 Recording**: Save your translation sessions as videos (desktop)
+
+
+
+### Quick ML Training### Advanced Features
+
+
+
+1. **Press 'T'** - Enter learning mode- **H** - Show/hide help---
+
+2. **Make gesture** - Hold your hand still
+
+3. **Type letter** - Label it (e.g., "A") + ENTER- **S** - Show/hide statistics
+
+4. **Repeat** - Collect 10-15 samples per letter
+
+5. **Press 'B'** - Bulk train with outlier removal- **P** - Toggle practice mode## 🚀 Features
+
+6. **Done!** - Model trained and ready
+
+- **R** - Start/stop recording
+
+### Training Modes
+
+- **V** - Toggle voice output### Core Recognition
+
+#### Press 'M' - Quick Training
+
+- Fast training (~1-2 seconds)- **1-3** - Accept word suggestions
+
+- No outlier detection
+
+- Best for clean, high-quality samples<table>
+
+
+
+#### Press 'B' - Bulk Training ⭐ RECOMMENDED## 🧠 Machine Learning<tr>
+
+- Automatic outlier removal
+
+- Statistical z-score analysis<td width="50%">
+
+- Better accuracy for mixed-quality data
+
+- Takes ~3-5 seconds### How It Works
+
+- Removes poor captures automatically
+
+#### 🖐️ Hand Tracking
+
+### Example Output
+
+1. **Capture Gestures** - Press 'T', make sign, hold still- **MediaPipe Integration**: 21-point hand landmark detection
+
 ```
-🎮 Practice Mode      →  Learn ASL alphabet interactively
-📹 Recording Mode     →  Save translation sessions as video
-🔊 Audio Feedback     →  Sound effects for letter confirmation
-📊 Analytics          →  Track speed, accuracy, and progress
-💾 Save Translations  →  Export text with timestamps
-🎯 Cooldown System    →  1.5s pause prevents false positives
+
+🧹 BULK TRAINING WITH OUTLIER REMOVAL2. **Label Them** - Type letter + ENTER- **Back-of-hand optimized**: Best results showing palm away from camera
+
+============================================================
+
+3. **Train Model** - Press 'M' after 10+ samples- **Scale-independent**: Works at various distances
+
+📊 Step 1: Detecting anomalous samples...
+
+   ❌ Removed outlier for 'A' (z-score: 3.21)4. **Improved Accuracy** - System learns YOUR hand- **GPU accelerated**: Metal support on Apple Silicon
+
+   ❌ Removed outlier for 'B' (z-score: 2.87)
+
+
+
+🧠 Step 2: Training model on cleaned data...
+
+✅ Training accuracy: 98.00%### Quick ML Tutorial</td>
+
+✅ Test accuracy: 95.00%
+
+<td width="50%">
+
+============================================================
+
+✅ BULK TRAINING COMPLETE!```bash
+
+🎯 Accuracy: 95.00%
+
+🧹 Outliers removed: 2Press 'T'  →  Learning mode ON#### 🔤 Letter Recognition
+
+📦 Final dataset: 48 samples
+
+============================================================Make sign A  →  Hold still  →  Captured!- **24 ASL Letters**: A-Z (excluding motion-based J & Z)
+
 ```
+
+Type "A" + ENTER  →  Saved- **Enhanced accuracy**: 85-95% recognition rate
 
 ---
 
-## 🌐 Web Version
+Repeat 10-15 times for different letters- **Multi-factor detection**: 3 checks per finger
 
-### Try it Online!
+## 📚 Documentation
 
-**Live Demo:** https://web-1j5h4ycct-epokatrandomstuff-4004s-projects.vercel.app
+Press 'M'  →  Train model (1-2 seconds)- **Angle calculations**: Precise joint measurements
 
-No installation required - works directly in your browser!
+Comprehensive documentation is available in the `documentation/` folder:
+
+Use normally  →  10-20% better accuracy!
+
+### 📖 Quick Start
+
+- **[Quick Reference](documentation/QUICK_REFERENCE.md)** - Essential commands and controls```</td>
+
+- **[Quick Start ML Tutorial](documentation/tutorials/QUICK_START_ML.md)** - Get started with ML in 5 minutes
+
+- **[Bulk Training Quickstart](documentation/tutorials/BULK_TRAINING_QUICKSTART.md)** - Fast guide to bulk training</tr>
+
+
+
+### 📘 Comprehensive Guides## 📊 Expected Accuracy</table>
+
+- **[ML Learning Guide](documentation/guides/ML_LEARNING_GUIDE.md)** - Complete ML training guide
+
+- **[Visual Guide ML](documentation/guides/VISUAL_GUIDE_ML.md)** - Visual walkthrough
+
+- **[Bulk Training Guide](documentation/guides/BULK_TRAINING.md)** - Detailed bulk training documentation
+
+| Mode | Accuracy |### User Interface
+
+### 🛠️ Developer Resources
+
+- **[Documentation Index](documentation/README.md)** - Full documentation overview|------|----------|
+
+- **[Push to GitHub Guide](documentation/PUSH_GUIDE.md)** - Contributing guide
+
+| Rule-based only | 70-80% || Feature | Description |
+
+---
+
+| After ML training (10-20 samples) | 75-85% ||---------|-------------|
+
+## 🏗️ Project Structure
+
+| After ML training (50+ samples) | 85-95% || **Live Video Feed** | Real-time webcam display with hand tracking overlay |
+
+```
+
+asl-translator/| **Text Display** | Large, scrolling text showing translated letters |
+
+├── main.py                      # Entry point
+
+├── requirements.txt             # Dependencies## 📁 Project Structure| **Progress Indicator** | Circular timer showing 1-second hold requirement |
+
+├── README.md                    # This file
+
+├── LICENSE                      # MIT License| **Gesture Timeline** | Visual history of last 15 detected gestures |
+
+├── training_data.json           # ML training data
+
+├── src/                         # Source code```| **Confidence Scores** | Color-coded feedback (🟢 High / 🟡 Medium / 🔴 Low) |
+
+│   ├── asl_translator.py        # Main application
+
+│   ├── hand_detector.py         # Hand trackingASL Translator/| **Help Overlay** | Interactive ASL alphabet reference guide |
+
+│   ├── asl_classifier.py        # Gesture recognition
+
+│   ├── ml_trainer.py            # ML training module├── main.py                  # Entry point (run this)| **Statistics Dashboard** | Real-time session metrics and performance data |
+
+│   └── feature_extraction.py   # Feature processing
+
+├── documentation/               # Documentation├── requirements.txt         # Dependencies
+
+│   ├── README.md                # Docs index
+
+│   ├── QUICK_REFERENCE.md       # Quick reference├── README.md               # This file### Advanced Features
+
+│   ├── guides/                  # Comprehensive guides
+
+│   │   ├── ML_LEARNING_GUIDE.md│
+
+│   │   ├── VISUAL_GUIDE_ML.md
+
+│   │   └── BULK_TRAINING.md├── src/                    # Source code```
+
+│   └── tutorials/               # Quick tutorials
+
+│       ├── QUICK_START_ML.md│   ├── asl_translator.py   # Main application🎮 Practice Mode      →  Learn ASL alphabet interactively
+
+│       └── BULK_TRAINING_QUICKSTART.md
+
+├── recordings/                  # Video recordings│   ├── asl_classifier.py   # Letter recognition📹 Recording Mode     →  Save translation sessions as video
+
+└── test_bulk_training.py        # Testing script
+
+```│   ├── hand_detector.py    # Hand tracking🔊 Audio Feedback     →  Sound effects for letter confirmation
+
+
+
+---│   ├── feature_extraction.py  # Geometric features📊 Analytics          →  Track speed, accuracy, and progress
+
+
+
+## 🎯 Recognition Details│   └── ml_trainer.py       # Machine learning💾 Save Translations  →  Export text with timestamps
+
+
+
+### Supported Letters│🎯 Cooldown System    →  1.5s pause prevents false positives
+
+
+
+**24 ASL Letters**: A, B, C, D, E, F, G, H, I, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y├── documentation/          # Technical docs```
+
+
+
+**Not Supported**: J and Z (require motion)│   └── *.md               # Implementation details
+
+
+
+### How It Works│---
+
+
+
+1. **Hand Detection** - MediaPipe detects 21 hand landmarks└── recordings/            # Saved video sessions
+
+2. **Feature Extraction** - Calculates angles, distances, and positions
+
+3. **Geometric Matching** - Rule-based pattern recognition    └── *.mp4## 🌐 Web Version
+
+4. **ML Enhancement** - Optional neural network for personalization
+
+5. **Hybrid System** - Combines both methods for best accuracy```
+
+
+
+### Accuracy### Try it Online!
+
+
+
+- **Rule-based**: 80-85% accuracy## 🛠️ Requirements
+
+- **With ML training**: 90-95% accuracy (after training on your hand)
+
+- **Best results**: Show back of hand, clear gestures, good lighting**Live Demo:** https://web-1j5h4ycct-epokatrandomstuff-4004s-projects.vercel.app
+
+
+
+---- Python 3.11+
+
+
+
+## 🧪 Testing- WebcamNo installation required - works directly in your browser!
+
+
+
+Test the bulk training feature with synthetic data:- macOS, Windows, or Linux
+
+
+
+```bash### Features
+
+python3 test_bulk_training.py
+
+```### Dependencies
+
+
+
+This demonstrates:- OpenCV (cv2) - Video processing- ✅ **24 ASL Letters** (A-Y, excluding J/Z)
+
+- Outlier detection algorithm
+
+- Statistical z-score analysis- MediaPipe - Hand tracking- ✅ **Real-time Detection** using MediaPipe Hands
+
+- Training workflow
+
+- Before/after statistics- NumPy - Numerical operations- ✅ **Beautiful UI** with modern design
+
+
+
+---- scikit-learn - Machine learning (optional, lazy-loaded)- ✅ **Mobile Friendly** - works on phones/tablets
+
+
+
+## 🛠️ Technical Stack- ✅ **Privacy First** - all processing in browser
+
+
+
+### Core Technologies## 🎯 Supported Letters- ✅ **Ultra-fast** - powered by Next.js & Vercel
+
+- **Python 3.11+** - Primary language
+
+- **OpenCV 4.8+** - Video processing
+
+- **MediaPipe 0.10.8** - Hand landmark detection
+
+- **NumPy 1.26.2** - Numerical operationsA, B, C, D, E, F, G, H, I, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y### How to Use (Web)
+
+
+
+### Machine Learning (Optional)
+
+- **scikit-learn 1.3+** - Neural networks
+
+- **MLPClassifier** - 3-layer network (128→64→32)**Note:** J and Z require motion and are not supported yet.1. Visit the live URL above
+
+- **StandardScaler** - Feature normalization
+
+2. Allow camera access when prompted
 
 ### Features
 
-- ✅ **24 ASL Letters** (A-Y, excluding J/Z)
-- ✅ **Real-time Detection** using MediaPipe Hands
-- ✅ **Beautiful UI** with modern design
-- ✅ **Mobile Friendly** - works on phones/tablets
-- ✅ **Privacy First** - all processing in browser
-- ✅ **Ultra-fast** - powered by Next.js & Vercel
+- Lazy loading for fast startup## 💡 Tips for Best Results3. Show the back of your hand to camera
 
-### How to Use (Web)
+- GPU acceleration (Metal on Apple Silicon)
 
-1. Visit the live URL above
-2. Allow camera access when prompted
-3. Show the back of your hand to camera
-4. Form ASL letters (A-Y)
-5. Hold for 1 second to add letter
-6. Use buttons to add space, backspace, or clear
+- Real-time video processing4. Form ASL letters (A-Y)
 
-### Tech Stack (Web)
+- Persistent data storage (JSON, pickle)
+
+1. **Lighting** - Good, even lighting works best5. Hold for 1 second to add letter
+
+---
+
+2. **Background** - Plain background recommended6. Use buttons to add space, backspace, or clear
+
+## 📊 Performance
+
+3. **Hand Position** - Show back of hand clearly
+
+### Optimization
+
+- **Startup time**: 1-2 seconds (with lazy loading)4. **Stability** - Hold gesture steady for 1 second### Tech Stack (Web)
+
+- **Frame rate**: 30 FPS smooth video
+
+- **Recognition latency**: <100ms5. **ML Training** - 5+ samples per letter for best accuracy
+
+- **ML training**: 1-5 seconds depending on dataset size
 
 - Next.js 14.0.4 + TypeScript
-- MediaPipe Hands (browser version)
-- TensorFlow.js
-- Tailwind CSS
-- React Webcam
-- Deployed on Vercel
 
-📖 **Full web documentation:** [web/README.md](web/README.md)
+### System Requirements
+
+- **CPU**: Multi-core recommended## 📚 Documentation- MediaPipe Hands (browser version)
+
+- **RAM**: 2GB minimum, 4GB recommended
+
+- **Webcam**: 720p or higher- TensorFlow.js
+
+- **OS**: Windows, macOS, or Linux
+
+Detailed documentation available in `documentation/` folder:- Tailwind CSS
+
+---
+
+- React Webcam
+
+## 🤝 Contributing
+
+- **ML_LEARNING_GUIDE.md** - Complete ML tutorial- Deployed on Vercel
+
+Contributions are welcome! Please:
+
+- **QUICK_START_ML.md** - 5-minute ML quick start
+
+1. Fork the repository
+
+2. Create a feature branch- **VISUAL_GUIDE_ML.md** - Visual walkthrough📖 **Full web documentation:** [web/README.md](web/README.md)
+
+3. Make your changes
+
+4. Test thoroughly- **QUICK_REFERENCE.md** - All keyboard shortcuts
+
+5. Submit a pull request
+
+---
+
+See [PUSH_GUIDE.md](documentation/PUSH_GUIDE.md) for details.
+
+## 🐛 Troubleshooting
 
 ---
 
 ## 📦 Installation (Desktop Version)
 
-### Prerequisites
+## 📝 License
+
+### App won't start
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+- Check Python version: `python --version` (need 3.11+)### Prerequisites
+
+---
+
+- Install dependencies: `pip install -r requirements.txt`
+
+## 🙏 Acknowledgments
 
 - **Python 3.11 or higher**
-- **Webcam** (built-in or external)
-- **Operating System**: macOS, Windows, or Linux
 
-### Setup
+- **MediaPipe** - Hand tracking technology
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/Hamdan772/asl-translator.git
-   cd asl-translator
-   ```
+- **OpenCV** - Computer vision library### Poor recognition- **Webcam** (built-in or external)
+
+- **scikit-learn** - Machine learning framework
+
+- **ASL Community** - Sign language resources- Improve lighting- **Operating System**: macOS, Windows, or Linux
+
+
+
+---- Make clear, stable gestures
+
+
+
+## 📞 Support- Train ML model with your hand (Press 'T')### Setup
+
+
+
+- **Documentation**: [documentation/README.md](documentation/README.md)
+
+- **Issues**: [GitHub Issues](https://github.com/Hamdan772/asl-translator/issues)
+
+- **Quick Reference**: [QUICK_REFERENCE.md](documentation/QUICK_REFERENCE.md)### ML won't load1. **Clone the repository**
+
+
+
+---- ML features are optional   ```bash
+
+
+
+<div align="center">- They load on first use (Press 'T' or 'M')   git clone https://github.com/Hamdan772/asl-translator.git
+
+
+
+**Made with ❤️ for the ASL community**- Takes 3-5 seconds to load sklearn/scipy   cd asl-translator
+
+
+
+⭐ Star this repo if you find it helpful!   ```
+
+
+
+</div>## 🤝 Contributing
+
 
 2. **Create virtual environment**
-   ```bash
+
+Pull requests welcome! Please test thoroughly before submitting.   ```bash
+
    python3 -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+## 📝 License   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
    ```
+
+MIT License - See LICENSE file
 
 3. **Install dependencies**
-   ```bash
+
+## 🙏 Acknowledgments   ```bash
+
    pip install -r requirements.txt
-   ```
 
-4. **Run the application**
+- MediaPipe by Google for hand tracking   ```
+
+- OpenCV for computer vision
+
+- scikit-learn for machine learning4. **Run the application**
+
    ```bash
-   python asl_translator.py
+
+---   python asl_translator.py
+
    ```
 
-### Dependencies
+**Version:** 2.0 + ML Learning  
+
+**Last Updated:** October 21, 2025  ### Dependencies
+
+**Status:** Production Ready ✅
 
 ```
-mediapipe==0.10.8    # Hand tracking and pose estimation
+
+For questions or issues, please open a GitHub issue.mediapipe==0.10.8    # Hand tracking and pose estimation
+
 opencv-python==4.8.1  # Computer vision and video processing
 numpy==1.26.2         # Numerical computations
 ```
