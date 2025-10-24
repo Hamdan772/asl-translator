@@ -1,4 +1,4 @@
-# 🤟 ASL Translator - Advanced Real-Time Sign Language Recognition
+# 🤟 ASL Translator
 
 <div align="center">
 
