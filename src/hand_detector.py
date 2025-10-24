@@ -460,25 +460,61 @@ class HandDetector:
             base = np.array([landmarks[base_idx][1], landmarks[base_idx][2]])
             
             if name == 'thumb':
-                # IMPROVED THUMB DETECTION using angle method
-                # Thumb is special - it moves perpendicular to other fingers
-                # Check if thumb tip is far from palm center (landmark 9)
-                palm_center = np.array([landmarks[9][1], landmarks[9][2]])
+                # IMPROVED THUMB DETECTION - Multi-factor approach
+                # The thumb moves perpendicular to other fingers and has unique geometry
                 
-                # Vector from thumb base to tip
-                thumb_vector = tip - base
-                # Vector from wrist to palm center
-                palm_vector = palm_center - wrist
+                # Get key reference points
+                palm_center = np.array([landmarks[9][1], landmarks[9][2]])  # Middle finger base
+                index_base = np.array([landmarks[5][1], landmarks[5][2]])   # Index finger base
                 
-                # Thumb is extended if:
-                # 1. Tip is far from palm center
-                # 2. Thumb vector is long (thumb stretched out)
-                tip_to_palm_dist = np.linalg.norm(tip - palm_center)
-                thumb_length = np.linalg.norm(thumb_vector)
-                base_to_palm_dist = np.linalg.norm(base - palm_center)
+                # Method 1: Distance-based (primary)
+                # When thumb is extended, tip is far from palm center
+                tip_to_palm = np.linalg.norm(tip - palm_center)
+                base_to_palm = np.linalg.norm(base - palm_center)
+                distance_ratio = tip_to_palm / (base_to_palm + 0.001)
                 
-                # More lenient thumb detection
-                is_extended = (tip_to_palm_dist > base_to_palm_dist * 1.1) and (thumb_length > base_to_palm_dist * 0.5)
+                # Method 2: Angle from wrist to thumb tip
+                # When extended, thumb points away from palm
+                wrist_to_tip = tip - wrist
+                wrist_to_palm = palm_center - wrist
+                
+                # Calculate angle between vectors
+                dot = np.dot(wrist_to_tip, wrist_to_palm)
+                norms = np.linalg.norm(wrist_to_tip) * np.linalg.norm(wrist_to_palm)
+                if norms > 0:
+                    cos_angle = np.clip(dot / norms, -1.0, 1.0)
+                    angle_deg = np.arccos(cos_angle) * 180 / np.pi
+                else:
+                    angle_deg = 0
+                
+                # Method 3: Thumb tip vs index base comparison
+                # Extended thumb is usually farther from wrist than index base
+                tip_to_wrist = np.linalg.norm(tip - wrist)
+                index_base_to_wrist = np.linalg.norm(index_base - wrist)
+                
+                # Method 4: Joint straightness
+                # Calculate if thumb joints are relatively straight
+                thumb_joint_mid = np.array([landmarks[3][1], landmarks[3][2]])
+                v1 = thumb_joint_mid - base
+                v2 = tip - thumb_joint_mid
+                joint_dot = np.dot(v1, v2)
+                joint_norms = np.linalg.norm(v1) * np.linalg.norm(v2)
+                if joint_norms > 0:
+                    joint_cos = np.clip(joint_dot / joint_norms, -1.0, 1.0)
+                    joint_angle = np.arccos(joint_cos) * 180 / np.pi
+                else:
+                    joint_angle = 180
+                
+                # Decision logic: Thumb is UP if multiple conditions are met
+                condition1 = distance_ratio > 1.15  # Tip significantly farther from palm
+                condition2 = angle_deg > 25  # Not too close to palm direction
+                condition3 = tip_to_wrist > index_base_to_wrist * 0.85  # Reasonable extension
+                condition4 = joint_angle < 150  # Joints relatively straight
+                
+                # Thumb is extended if at least 3 out of 4 conditions are true
+                votes = sum([condition1, condition2, condition3, condition4])
+                is_extended = votes >= 3
+                
                 finger_states[name] = is_extended
             else:
                 # For other fingers, use improved angle + distance method

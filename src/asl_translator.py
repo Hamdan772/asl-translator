@@ -59,29 +59,13 @@ class ASLTranslator:
         # Audio feedback (system beep)
         self.audio_enabled = True
         
-        # NEW: Practice/Learning Mode
-        self.practice_mode = False
-        self.target_letter = ""
-        self.practice_letters = list("ABCDEFGHIKLMNOPRSTVWXY")
-        self.practice_index = 0
-        self.practice_score = 0
-        self.practice_attempts = 0
-        
-        # NEW: Recording Mode
-        self.recording = False
-        self.video_writer = None
-        self.recording_start_time = 0
-        
-        # NEW: Custom Dictionary
-        self.custom_words = []
-        try:
-            with open('custom_words.txt', 'r') as f:
-                self.custom_words = [line.strip().upper() for line in f.readlines()]
-        except:
-            pass  # File doesn't exist yet
-        
-        # NEW: Voice output
-        self.voice_enabled = False  # TTS feature
+        # GAMIFICATION FEATURES DISABLED (but initialized to prevent errors)
+        self.practice_mode = False  # Disabled
+        self.recording = False  # Disabled
+        self.video_writer = None  # Disabled
+        self.recording_start_time = 0  # Disabled
+        self.custom_words = []  # Disabled
+        self.voice_enabled = False  # Disabled
         
         # UI settings
         self.font = cv2.FONT_HERSHEY_SIMPLEX
@@ -141,6 +125,9 @@ class ASLTranslator:
         self.learning_prompt = ""
         self.ml_confidence_threshold = 0.70  # Use ML if confidence > 70%
         self.ml_enabled = False  # ML needs to be trained first
+        
+        # Debug mode (can be toggled with 'D' key)
+        self.debug_mode = False
     
 
     def load_ml_trainer(self):
@@ -801,37 +788,38 @@ class ASLTranslator:
         actual_fps = int(cap.get(cv2.CAP_PROP_FPS))
         
         print("=" * 60)
-        print("🚀 ASL Translator v2.0 - OPTIMIZED EDITION")
+        print("🚀 ASL Translator v2.0 - SIMPLIFIED EDITION")
         print("=" * 60)
         print(f"\n📹 Camera: {actual_width}x{actual_height} @ {actual_fps} FPS (optimized)")
         print("📹 Mode: BACK OF HAND recognition")
-        print("\n⌨️  Controls:")
-        print("  • Press SPACE to add space")
-        print("  • Press BACKSPACE to delete last character")
-        print("  • Press C to clear all text")
-        print("  • Press H to show/hide help guide")
-        print("  • Press S to show/hide statistics")
-        print("  • Press 4 to toggle practice mode")
-        print("  • Press 5 to start/stop recording")
-        print("  • Press 6 to toggle voice output")
-        print("  • Press 7 to add current word to dictionary")
-        print("  • Press 1-3 to accept word suggestions")
-        print("  • Press T to enter EASY TRAINING MODE")
-        print("  • Press M to train ML model")
-        print("  • Press B to BULK TRAIN (removes outliers)")
-        print("  • Press N to show ML statistics")
-        print("  • Press ESC to save & quit | Q to quit without saving")
+        print("\n⌨️  CORE CONTROLS:")
+        print("  • SPACE - Add space")
+        print("  • BACKSPACE - Delete last character")
+        print("  • C - Clear all text")
+        print("  • H - Show/hide help guide")
+        print("  • S - Show/hide statistics")
+        print("\n⌨️  TRAINING CONTROLS:")
+        print("  • T - Enter TRAINING MODE")
+        print("  • A-Z - Select letter to train (in training mode)")
+        print("  • ENTER - Capture training sample")
+        print("  • M - Train ML model (standard)")
+        print("  • B - BULK TRAIN (removes outliers)")
+        print("  • N - Show ML statistics")
+        print("  • D - Toggle DEBUG mode (for troubleshooting)")
+        print("\n⌨️  EXIT:")
+        print("  • ESC - Save & quit")
+        print("  • Q - Quit without saving")
         print("\n✋ Usage:")
         print("  • Show the BACK of your hand to the camera")
         print("  • Hold gesture for 1 second to add letter")
         print("  • Wait 1.5 seconds before next letter (cooldown)")
         print("  • Make clear gestures for best results")
-        print("  • Watch the progress indicator and gesture timeline")
-        print("\n🆕 Performance Optimizations:")
-        print("  • Optimized resolution for smooth 60 FPS")
-        print("  • Lite MediaPipe model for faster processing")
-        print("  • Improved thumb detection algorithm")
-        print("  • Enhanced visual quality with minimal overhead")
+        print("\n✨ Features:")
+        print("  • 121 colorful dots (21 green + 100 yellow)")
+        print("  • Finger labels on each fingertip")
+        print("  • FINGER STATUS panel during training")
+        print("  • Automatic photo capture during training")
+        print("  • Optimized 40-50 FPS performance")
         print("=" * 60)
         
         prev_time = 0
@@ -857,13 +845,14 @@ class ASLTranslator:
                 # Check if back of hand
                 is_back_of_hand = self.detector.is_back_of_hand(landmarks) if landmarks else False
                 
+                # ALWAYS show finger status panel when hand is detected
+                if landmarks:
+                    img = self.detector.draw_finger_state_indicator(img, landmarks, 10, 200)
+                
                 # ========== LEARNING MODE LOGIC (SIMPLIFIED) ==========
                 if self.learning_mode and landmarks:
                     # Show training UI
                     h_learn, w_learn = img.shape[:2]
-                    
-                    # Draw finger state indicator during training
-                    img = self.detector.draw_finger_state_indicator(img, landmarks, 10, 200)
                     
                     if self.current_training_letter:
                         # Currently training a specific letter
@@ -913,7 +902,57 @@ class ASLTranslator:
                 if landmarks and not self.learning_mode:  # Skip in learning mode
                     # ONLY use ML prediction - no rule-based classifier
                     if self.ml_enabled and self.ml_trainer:
-                        ml_prediction, ml_confidence = self.ml_trainer.predict(landmarks)
+                        # Get finger states for prediction
+                        finger_states = self.detector.get_finger_states(landmarks)
+                        
+                        # Extract hand region for HOG features
+                        hand_image = None
+                        try:
+                            h_img, w_img = img.shape[:2]
+                            x_coords = [lm[1] for lm in landmarks]
+                            y_coords = [lm[2] for lm in landmarks]
+                            x_min = max(0, int(min(x_coords) * w_img) - 40)
+                            x_max = min(w_img, int(max(x_coords) * w_img) + 40)
+                            y_min = max(0, int(min(y_coords) * h_img) - 40)
+                            y_max = min(h_img, int(max(y_coords) * h_img) + 40)
+                            
+                            # Validate dimensions
+                            if x_max > x_min and y_max > y_min and x_max <= w_img and y_max <= h_img:
+                                hand_image = img[y_min:y_max, x_min:x_max]
+                                # Verify image is not empty
+                                if hand_image.size == 0:
+                                    hand_image = None
+                        except Exception as e:
+                            pass  # If cropping fails, proceed without image features
+                        
+                        # Predict with landmarks, finger states, AND hand image
+                        ml_prediction, ml_confidence = self.ml_trainer.predict(landmarks, finger_states, hand_image)
+                        
+                        # Apply rule-based corrections for V vs W confusion
+                        if ml_prediction in ['V', 'W'] and finger_states:
+                            finger_count = sum([
+                                finger_states.get('thumb', False),
+                                finger_states.get('index', False),
+                                finger_states.get('middle', False),
+                                finger_states.get('ring', False),
+                                finger_states.get('pinky', False)
+                            ])
+                            
+                            # V should have exactly 2 fingers (index + middle)
+                            # W should have exactly 3 fingers (index + middle + ring)
+                            if ml_prediction == 'W' and finger_count == 2:
+                                # Likely V, not W
+                                if finger_states.get('index') and finger_states.get('middle') and not finger_states.get('ring'):
+                                    print(f"🔧 Correcting W→V (only 2 fingers detected)")
+                                    ml_prediction = 'V'
+                                    ml_confidence *= 0.9  # Slightly reduce confidence
+                            elif ml_prediction == 'V' and finger_count == 3:
+                                # Likely W, not V
+                                if finger_states.get('index') and finger_states.get('middle') and finger_states.get('ring'):
+                                    print(f"🔧 Correcting V→W (3 fingers detected)")
+                                    ml_prediction = 'W'
+                                    ml_confidence *= 0.9
+                        
                         if ml_confidence > self.ml_confidence_threshold:
                             current_letter = ml_prediction
                             confidence = ml_confidence
@@ -1062,6 +1101,10 @@ class ASLTranslator:
                 # Handle keyboard input
                 key = cv2.waitKey(1) & 0xFF
                 
+                # DEBUG: Show key code when in learning mode (if debug enabled)
+                if self.debug_mode and key != 255 and self.learning_mode:
+                    print(f"🔍 Key pressed: {key} (char: '{chr(key) if 32 <= key <= 126 else '?'}')")
+                
                 if key == ord('q'):
                     print("\n" + "=" * 60)
                     print("👋 Exiting without saving...")
@@ -1095,57 +1138,37 @@ class ASLTranslator:
                 elif key == ord('s') or key == ord('S'):
                     self.show_stats = not self.show_stats
                     print(f"📊 Statistics {'shown' if self.show_stats else 'hidden'}")
-                elif key in [ord('1'), ord('2'), ord('3')]:
-                    # Accept word suggestion
-                    suggestions = self.get_word_suggestions()
-                    suggestion_idx = int(chr(key)) - 1
-                    if suggestion_idx < len(suggestions):
-                        # Replace current partial word with suggestion
-                        words = self.current_text.split()
-                        if words:
-                            words[-1] = suggestions[suggestion_idx]
-                            self.current_text = " ".join(words) + " "
-                            print(f"✨ Accepted suggestion: {suggestions[suggestion_idx]}")
-                elif key == ord('4'):
-                    # Toggle practice mode (was P)
-                    self.practice_mode = not self.practice_mode
-                    if self.practice_mode:
-                        self.target_letter = self.practice_letters[self.practice_index]
-                        print(f"📚 Practice mode ON - Target letter: {self.target_letter}")
+                
+                # GAMIFICATION FEATURES DISABLED (keys 1-8)
+                # elif key in [ord('1'), ord('2'), ord('3')]:
+                #     # Accept word suggestion
+                #     suggestions = self.get_word_suggestions()
+                #     suggestion_idx = int(chr(key)) - 1
+                #     if suggestion_idx < len(suggestions):
+                #         words = self.current_text.split()
+                #         if words:
+                #             words[-1] = suggestions[suggestion_idx]
+                #             self.current_text = " ".join(words) + " "
+                #             print(f"✨ Accepted suggestion: {suggestions[suggestion_idx]}")
+                # elif key == ord('4'):
+                #     # Toggle practice mode
+                # elif key == ord('5'):
+                #     # Toggle recording
+                # elif key == ord('6'):
+                #     # Toggle voice output
+                # elif key == ord('7'):
+                #     # Add last word to custom dictionary
+                # elif key == ord('8'):
+                #     # Show gamification stats
+                
+                # Debug mode toggle (Press 'D')
+                elif key == ord('d') or key == ord('D'):
+                    self.debug_mode = not self.debug_mode
+                    if self.debug_mode:
+                        print("\n🔍 DEBUG MODE ENABLED - Detailed logs will be shown")
                     else:
-                        print(f"📚 Practice mode OFF - Final score: {self.practice_score}/{self.practice_attempts}")
-                elif key == ord('5'):
-                    # Toggle recording (was R)
-                    if not self.recording:
-                        h, w = img.shape[:2]
-                        self.start_recording(w, h)
-                    else:
-                        self.stop_recording()
-                elif key == ord('6'):
-                    # Toggle voice output (was V)
-                    self.voice_enabled = not self.voice_enabled
-                    status = "ON" if self.voice_enabled else "OFF"
-                    print(f"🔊 Voice output: {status}")
-                    if self.voice_enabled and self.current_text:
-                        self.speak_text(self.current_text)
-                elif key == ord('7'):
-                    # Add last word to custom dictionary (was A)
-                    words = self.current_text.strip().split()
-                    if words:
-                        last_word = words[-1]
-                        self.add_custom_word(last_word)
-                elif key == ord('8'):
-                    # Show gamification stats (was G)
-                    print("\n" + "=" * 60)
-                    print("🎮 GAMIFICATION STATS")
-                    print("=" * 60)
-                    print(f"Level: {self.gamification['level']}")
-                    print(f"XP: {self.gamification['xp']}/{self.gamification['xp_to_next_level']}")
-                    print(f"Total Letters: {self.gamification['total_letters']}")
-                    print(f"Achievements: {len(self.gamification['achievements'])}")
-                    if self.gamification['achievements']:
-                        print(f"Unlocked: {', '.join(self.gamification['achievements'])}")
-                    print("=" * 60)
+                        print("\n🔍 DEBUG MODE DISABLED - Clean output")
+                
                 # Learning mode (Press 'T') - SIMPLIFIED TRAINING
                 elif key == ord('t') or key == ord('T'):
                     self.learning_mode = not self.learning_mode
@@ -1233,15 +1256,27 @@ class ASLTranslator:
                             self.load_ml_trainer()
                         
                         if self.ml_trainer_loaded:
-                            # Add training sample
-                            success = self.ml_trainer.add_training_sample(landmarks, self.current_training_letter)
+                            # Get finger states
+                            finger_states = self.detector.get_finger_states(landmarks)
+                            
+                            # Add training sample WITH finger states
+                            success = self.ml_trainer.add_training_sample(
+                                landmarks, 
+                                self.current_training_letter,
+                                finger_states=finger_states
+                            )
+                            
                             if success:
                                 if self.current_training_letter not in self.training_count:
                                     self.training_count[self.current_training_letter] = 0
                                 self.training_count[self.current_training_letter] += 1
                                 count = self.training_count[self.current_training_letter]
                                 
-                                # SAVE TRAINING PHOTOS
+                                # IMPROVED PHOTO CAPTURE - Only hand region, no overlays
+                                photo_saved = False
+                                photo_path = None
+                                if self.debug_mode:
+                                    print(f"\n🔍 DEBUG: Starting photo capture for {self.current_training_letter}")
                                 try:
                                     import os
                                     import datetime
@@ -1250,29 +1285,95 @@ class ASLTranslator:
                                     photo_dir = "training_photos"
                                     if not os.path.exists(photo_dir):
                                         os.makedirs(photo_dir)
+                                        if self.debug_mode:
+                                            print(f"📁 Created directory: {photo_dir}")
                                     
                                     # Create letter-specific subdirectory
                                     letter_dir = os.path.join(photo_dir, self.current_training_letter)
                                     if not os.path.exists(letter_dir):
                                         os.makedirs(letter_dir)
+                                        if self.debug_mode:
+                                            print(f"📁 Created directory: {letter_dir}")
+                                    
+                                    if self.debug_mode:
+                                        print(f"🔍 DEBUG: Directories created. Letter dir: {letter_dir}")
                                     
                                     # Generate timestamp filename
                                     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
                                     
-                                    # Save original frame (with dots)
-                                    filename_with_dots = os.path.join(letter_dir, f"{self.current_training_letter}_{count:03d}_{timestamp}_dots.jpg")
-                                    cv2.imwrite(filename_with_dots, img)
+                                    if self.debug_mode:
+                                        print(f"🔍 DEBUG: Capturing fresh frame from camera...")
+                                    # Capture a FRESH frame without overlays
+                                    ret_clean, img_clean = cap.read()
+                                    if self.debug_mode:
+                                        print(f"🔍 DEBUG: Frame capture result: {ret_clean}, shape: {img_clean.shape if ret_clean else 'None'}")
                                     
-                                    # Save clean frame without dots (capture fresh frame)
-                                    success_clean, img_clean = cap.read()
-                                    if success_clean:
-                                        img_clean = cv2.flip(img_clean, 1)
-                                        filename_clean = os.path.join(letter_dir, f"{self.current_training_letter}_{count:03d}_{timestamp}_clean.jpg")
-                                        cv2.imwrite(filename_clean, img_clean)
+                                    if not ret_clean or img_clean is None:
+                                        raise ValueError("Failed to capture clean frame from camera")
                                     
-                                    print(f"✅ Captured! {self.current_training_letter}: {count} samples (photos saved)")
+                                    # Flip the frame
+                                    img_clean = cv2.flip(img_clean, 1)
+                                    h_img, w_img = img_clean.shape[:2]
+                                    if self.debug_mode:
+                                        print(f"🔍 DEBUG: Frame flipped. Size: {w_img}x{h_img}")
+                                    
+                                    # Extract hand bounding box from landmarks
+                                    x_coords = [lm[1] for lm in landmarks]
+                                    y_coords = [lm[2] for lm in landmarks]
+                                    
+                                    x_min = max(0, int(min(x_coords) * w_img) - 40)
+                                    x_max = min(w_img, int(max(x_coords) * w_img) + 40)
+                                    y_min = max(0, int(min(y_coords) * h_img) - 40)
+                                    y_max = min(h_img, int(max(y_coords) * h_img) + 40)
+                                    
+                                    if self.debug_mode:
+                                        print(f"🔍 DEBUG: Crop region: x[{x_min}:{x_max}], y[{y_min}:{y_max}]")
+                                    
+                                    # Validate coordinates
+                                    if x_max <= x_min or y_max <= y_min:
+                                        raise ValueError(f"Invalid crop coordinates: x[{x_min}:{x_max}], y[{y_min}:{y_max}]")
+                                    
+                                    # Crop to hand region
+                                    hand_only = img_clean[y_min:y_max, x_min:x_max].copy()
+                                    if self.debug_mode:
+                                        print(f"🔍 DEBUG: Cropped hand image shape: {hand_only.shape}")
+                                    
+                                    # Validate crop is not empty
+                                    if hand_only.size == 0:
+                                        raise ValueError("Cropped region is empty")
+                                    
+                                    # Save hand-only photo
+                                    filename_hand = os.path.join(letter_dir, f"{self.current_training_letter}_{count:03d}_{timestamp}_hand.jpg")
+                                    if self.debug_mode:
+                                        print(f"🔍 DEBUG: Attempting to save to: {filename_hand}")
+                                    
+                                    success_write = cv2.imwrite(filename_hand, hand_only)
+                                    if self.debug_mode:
+                                        print(f"🔍 DEBUG: cv2.imwrite result: {success_write}")
+                                    
+                                    if success_write:
+                                        photo_saved = True
+                                        photo_path = filename_hand
+                                        print(f"📸 ✅ Photo saved successfully: {filename_hand}")
+                                    else:
+                                        raise ValueError("cv2.imwrite returned False")
+                                    
                                 except Exception as e:
-                                    print(f"✅ Captured! {self.current_training_letter}: {count} samples (photo save failed: {e})")
+                                    print(f"❌ Photo save failed with error: {e}")
+                                    import traceback
+                                    traceback.print_exc()
+                                
+                                # Save photo path to training sample
+                                if photo_saved and self.ml_trainer_loaded:
+                                    # Update the last sample with photo path
+                                    if len(self.ml_trainer.training_data) > 0:
+                                        self.ml_trainer.training_data[-1]['photo_path'] = photo_path
+                                        self.ml_trainer.save_training_data()
+                                
+                                if photo_saved:
+                                    print(f"✅ Captured! {self.current_training_letter}: {count} samples (photo + finger states saved)")
+                                else:
+                                    print(f"✅ Captured! {self.current_training_letter}: {count} samples (landmarks + finger states saved, photo failed)")
                                 
                                 self.play_sound('success')
                                 

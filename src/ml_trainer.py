@@ -1,6 +1,6 @@
 """
 Machine Learning Trainer for ASL Gestures
-Trains a neural network on captured hand landmark data
+Trains a neural network on captured hand landmark data + image features
 Optimized for fast loading and crash prevention
 """
 
@@ -11,6 +11,7 @@ from typing import Optional, Tuple, Dict, List
 
 # Import only when needed to speed up loading
 import numpy as np
+import cv2
 
 class MLTrainer:
     """ML trainer with lazy sklearn import for faster startup"""
@@ -84,21 +85,84 @@ class MLTrainer:
             self.training_data = []
     
     def save_training_data(self):
-        """Save training data to JSON file"""
+        """Save training data to JSON file with proper encoding"""
         try:
+            # Convert any numpy types to native Python types
+            def convert_to_native(obj):
+                if isinstance(obj, dict):
+                    return {k: convert_to_native(v) for k, v in obj.items()}
+                elif isinstance(obj, list):
+                    return [convert_to_native(item) for item in obj]
+                elif isinstance(obj, (np.integer, np.floating)):
+                    return obj.item()
+                elif isinstance(obj, np.ndarray):
+                    return obj.tolist()
+                elif isinstance(obj, np.bool_):
+                    return bool(obj)
+                else:
+                    return obj
+            
+            clean_data = convert_to_native(self.training_data)
+            
             with open(self.data_file, 'w') as f:
-                json.dump(self.training_data, f, indent=2)
+                json.dump(clean_data, f, indent=2)
             print(f"✅ Saved {len(self.training_data)} training samples")
         except Exception as e:
             print(f"❌ Could not save training data: {e}")
+            import traceback
+            traceback.print_exc()
     
-    def add_training_sample(self, landmarks, label):
+    def extract_image_features(self, image_path):
         """
-        Add a new training sample
+        Extract HOG (Histogram of Oriented Gradients) features from hand image
+        
+        Args:
+            image_path: Path to the cropped hand image
+            
+        Returns:
+            numpy array of HOG features (324 features from 64x64 image)
+        """
+        try:
+            if not os.path.exists(image_path):
+                return np.zeros(324)  # Return zeros if image not found
+            
+            # Load image
+            img = cv2.imread(image_path)
+            if img is None:
+                return np.zeros(324)
+            
+            # Resize to fixed size for consistent features
+            img_resized = cv2.resize(img, (64, 64))
+            
+            # Convert to grayscale
+            gray = cv2.cvtColor(img_resized, cv2.COLOR_BGR2GRAY)
+            
+            # Calculate HOG features
+            # HOG parameters optimized for hand shapes
+            win_size = (64, 64)
+            block_size = (16, 16)
+            block_stride = (8, 8)
+            cell_size = (8, 8)
+            nbins = 9
+            
+            hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, nbins)
+            features = hog.compute(gray)
+            
+            # Flatten to 1D array
+            return features.flatten()
+            
+        except Exception as e:
+            print(f"⚠️  Failed to extract image features from {image_path}: {e}")
+            return np.zeros(324)  # Return zeros on error
+    
+    def add_training_sample(self, landmarks, label, finger_states=None):
+        """
+        Add a new training sample with finger states
         
         Args:
             landmarks: List of 21 hand landmarks (x, y, z for each)
             label: Letter label (A-Z)
+            finger_states: Dict with finger UP/DOWN states (optional)
         """
         # Flatten landmarks to 1D array (21 points × 3 coords = 63 features)
         flattened = []
@@ -111,8 +175,17 @@ class MLTrainer:
             'timestamp': datetime.now().isoformat()
         }
         
+        # Add finger states if provided (convert to native Python types for JSON)
+        if finger_states:
+            # Ensure all values are native Python booleans
+            sample['finger_states'] = {k: bool(v) for k, v in finger_states.items()}
+            finger_count = sum(1 for state in finger_states.values() if state)
+            sample['finger_count'] = int(finger_count)
+            print(f"✅ Added '{label}' sample with {finger_count} fingers UP (total: {len(self.training_data) + 1})")
+        else:
+            print(f"✅ Added training sample for '{label}' (total: {len(self.training_data) + 1})")
+        
         self.training_data.append(sample)
-        print(f"✅ Added training sample for '{label}' (total: {len(self.training_data)})")
         
         # Auto-save
         self.save_training_data()
@@ -162,9 +235,66 @@ class MLTrainer:
             for letter in sorted(stats.keys()):
                 print(f"   {letter}: {stats[letter]} samples")
             
-            # Prepare data
-            X = np.array([s['landmarks'] for s in self.training_data])
+            # Prepare data - combine landmarks, finger states, AND advanced features
+            X_list = []
+            for s in self.training_data:
+                features = list(s['landmarks'])  # 63 landmark features
+                
+                # Add finger state features if available (5 binary features)
+                if 'finger_states' in s:
+                    finger_states = s['finger_states']
+                    features.extend([
+                        1 if finger_states.get('thumb', False) else 0,
+                        1 if finger_states.get('index', False) else 0,
+                        1 if finger_states.get('middle', False) else 0,
+                        1 if finger_states.get('ring', False) else 0,
+                        1 if finger_states.get('pinky', False) else 0
+                    ])
+                else:
+                    # No finger states - add zeros
+                    features.extend([0, 0, 0, 0, 0])
+                
+                # Add advanced geometric features to distinguish V vs W
+                # Extract landmark positions (they're stored as [id, x, y, id, x, y, ...])
+                lm_flat = s['landmarks']
+                landmarks_xyz = [(lm_flat[i], lm_flat[i+1], lm_flat[i+2]) for i in range(0, len(lm_flat), 3)]
+                
+                # Get key finger tip positions
+                index_tip = landmarks_xyz[8]  # landmark 8
+                middle_tip = landmarks_xyz[12]  # landmark 12
+                ring_tip = landmarks_xyz[16]  # landmark 16
+                wrist = landmarks_xyz[0]  # landmark 0
+                
+                # Calculate finger separation angles (helps distinguish V from W)
+                # Distance between index and middle tips
+                index_middle_dist = np.sqrt((index_tip[1] - middle_tip[1])**2 + (index_tip[2] - middle_tip[2])**2)
+                # Distance between middle and ring tips
+                middle_ring_dist = np.sqrt((middle_tip[1] - ring_tip[1])**2 + (middle_tip[2] - ring_tip[2])**2)
+                # Distance between index and ring tips
+                index_ring_dist = np.sqrt((index_tip[1] - ring_tip[1])**2 + (index_tip[2] - ring_tip[2])**2)
+                
+                # Add these geometric features
+                features.extend([
+                    index_middle_dist,  # V has wider gap here
+                    middle_ring_dist,   # W has significant gap here
+                    index_ring_dist,    # Overall span
+                    middle_ring_dist / (index_middle_dist + 0.001)  # Ratio to distinguish patterns
+                ])
+                
+                # Add image-based HOG features if photo exists (324 features)
+                if 'photo_path' in s and s['photo_path']:
+                    img_features = self.extract_image_features(s['photo_path'])
+                else:
+                    img_features = np.zeros(324)  # No photo, use zeros
+                
+                features.extend(img_features.tolist())
+                
+                X_list.append(features)
+            
+            X = np.array(X_list)
             y = np.array([s['label'] for s in self.training_data])
+            
+            print(f"📐 Feature count: {X.shape[1]} (63 landmarks + 5 finger + 4 geometric + 324 HOG image features)")
             
             # Split into train/test
             X_train, X_test, y_train, y_test = self._train_test_split(
@@ -178,15 +308,20 @@ class MLTrainer:
             X_train_scaled = self.scaler.transform(X_train)
             X_test_scaled = self.scaler.transform(X_test)
             
-            # Train neural network
+            # Train neural network with enhanced architecture for image+landmark features
+            # Larger network to handle 396 features (63+5+4+324)
             self.model = self._MLPClassifier(
-                hidden_layer_sizes=(128, 64, 32),
+                hidden_layer_sizes=(256, 128, 64, 32),  # Deeper network
                 activation='relu',
                 solver='adam',
-                max_iter=500,
+                max_iter=1000,  # More iterations
                 random_state=42,
                 early_stopping=True,
-                validation_fraction=0.1
+                validation_fraction=0.15,  # More validation data
+                learning_rate_init=0.001,  # Learning rate
+                alpha=0.01,  # L2 regularization
+                batch_size='auto',
+                tol=1e-4
             )
             
             self.model.fit(X_train_scaled, y_train)
@@ -246,12 +381,14 @@ class MLTrainer:
             self.model = None
             return False
     
-    def predict(self, landmarks):
+    def predict(self, landmarks, finger_states=None, hand_image=None):
         """
-        Predict letter from landmarks using trained model
+        Predict letter from landmarks, finger states, and hand image using trained model
         
         Args:
             landmarks: List of 21 hand landmarks (x, y, z for each)
+            finger_states: Dict with finger UP/DOWN states (optional)
+            hand_image: Cropped hand image for HOG feature extraction (optional)
             
         Returns:
             (letter, confidence) or (None, 0) if no model
@@ -265,25 +402,91 @@ class MLTrainer:
             for point in landmarks:
                 flattened.extend([point[0], point[1], point[2]])
             
+            # Add finger state features (5 binary features)
+            if finger_states:
+                flattened.extend([
+                    1 if finger_states.get('thumb', False) else 0,
+                    1 if finger_states.get('index', False) else 0,
+                    1 if finger_states.get('middle', False) else 0,
+                    1 if finger_states.get('ring', False) else 0,
+                    1 if finger_states.get('pinky', False) else 0
+                ])
+            else:
+                # No finger states - add zeros
+                flattened.extend([0, 0, 0, 0, 0])
+            
+            # Add the same geometric features as training
+            # Get key finger tip positions (landmarks is list of [id, x, y])
+            index_tip = landmarks[8]  # landmark 8
+            middle_tip = landmarks[12]  # landmark 12
+            ring_tip = landmarks[16]  # landmark 16
+            
+            # Calculate finger separation distances
+            index_middle_dist = np.sqrt((index_tip[1] - middle_tip[1])**2 + (index_tip[2] - middle_tip[2])**2)
+            middle_ring_dist = np.sqrt((middle_tip[1] - ring_tip[1])**2 + (middle_tip[2] - ring_tip[2])**2)
+            index_ring_dist = np.sqrt((index_tip[1] - ring_tip[1])**2 + (index_tip[2] - ring_tip[2])**2)
+            
+            # Add geometric features (4 features)
+            flattened.extend([
+                index_middle_dist,
+                middle_ring_dist,
+                index_ring_dist,
+                middle_ring_dist / (index_middle_dist + 0.001)
+            ])
+            
+            # Add HOG image features (324 features)
+            if hand_image is not None:
+                # Extract HOG features from provided hand image
+                try:
+                    # Resize to 64x64
+                    img_resized = cv2.resize(hand_image, (64, 64))
+                    gray = cv2.cvtColor(img_resized, cv2.COLOR_BGR2GRAY)
+                    
+                    # Calculate HOG
+                    win_size = (64, 64)
+                    block_size = (16, 16)
+                    block_stride = (8, 8)
+                    cell_size = (8, 8)
+                    nbins = 9
+                    hog = cv2.HOGDescriptor(win_size, block_size, block_stride, cell_size, nbins)
+                    img_features = hog.compute(gray).flatten()
+                    
+                    flattened.extend(img_features.tolist())
+                except Exception as e:
+                    print(f"⚠️  Failed to extract HOG features during prediction: {e}")
+                    flattened.extend(np.zeros(324).tolist())
+            else:
+                # No image provided, use zeros
+                flattened.extend(np.zeros(324).tolist())
+            
             X = np.array([flattened])
             X_scaled = self.scaler.transform(X)
             
             # Get prediction and probability
             prediction = self.model.predict(X_scaled)[0]
             probabilities = self.model.predict_proba(X_scaled)[0]
-            confidence = max(probabilities)
             
-            # DEBUG: Show all class probabilities
+            # Apply confidence calibration - penalize if top 2 predictions are close
             class_labels = self.model.classes_
             prob_dict = {label: prob for label, prob in zip(class_labels, probabilities)}
             sorted_probs = sorted(prob_dict.items(), key=lambda x: x[1], reverse=True)
+            
+            top1_prob = sorted_probs[0][1]
+            top2_prob = sorted_probs[1][1] if len(sorted_probs) > 1 else 0
+            
+            # If top 2 are very close, reduce confidence (indicates ambiguity)
+            prob_diff = top1_prob - top2_prob
+            if prob_diff < 0.15:  # Top 2 within 15%
+                confidence = top1_prob * 0.8  # Reduce confidence by 20%
+            else:
+                confidence = top1_prob
             
             # Print top 3 predictions for debugging
             print(f"🔍 Predictions: ", end="")
             for i, (label, prob) in enumerate(sorted_probs[:3]):
                 marker = "✅" if i == 0 else "  "
                 print(f"{marker}{label}:{prob:.1%} ", end="")
-            print()
+            print(f"| Confidence: {confidence:.1%}")
             
             return prediction, confidence
             
