@@ -105,8 +105,10 @@ python3 src/asl_translator.py
 | Key | Action | Description |
 |-----|--------|-------------|
 | **1** | Toggle training mode | Enters/exits training mode |
+| **T** | Toggle direct letter mode | **Type A-Z directly** instead of number keys (in training mode) |
+| **A-Z** | Select letter (direct mode) | Directly select any letter A-Z when T is pressed |
 | **2** | Train model | Trains neural network and **automatically removes anomalous samples** |
-| **3-9, 0** | Select letter to train | Choose which letter group to cycle through |
+| **3-9, 0** | Select letter (number mode) | Choose which letter group to cycle through |
 | **ENTER** | Capture training sample | Saves auto-cropped hand photo with data |
 | **B** | Bulk train (advanced) | Alternative training method |
 | **N** | Show ML statistics | Displays training data distribution |
@@ -127,27 +129,32 @@ python3 src/asl_translator.py
 | **8** | I → S | Press 8 repeatedly to cycle through I, S |
 | **9** | J → T | Press 9 repeatedly to cycle through J, T |
 
-### 🎯 Training Mode Workflow
+### 🎯 Training Mode Workflow (EASY METHOD)
 
 ```
 1. Press 1          → Enter training mode
-2. Press 4          → Selects letter B (first in group 4)
-3. Press 4 again    → Cycles to letter L
-4. Press 4 again    → Cycles to letter V ✓
-5. Make V gesture   → Hold hand steady
-6. Press ENTER      → Captures cropped hand photo + data (repeat 15-20 times)
-7. Press 5          → Switch to letter C (or press again for M or W)
-8. Make gesture     → Capture 15-20 samples with ENTER
-9. Press 2          → Trains model with automatic outlier removal
-10. Press 1         → Exit training mode
-11. Test gestures!  → Model recognizes your trained letters
+2. Press T          → Enable direct letter typing ⌨️
+3. Press V          → Select letter V directly!
+4. Make V gesture   → Hold hand steady
+5. Press ENTER      → Captures cropped hand photo + data (repeat 15-20 times)
+6. Press W          → Switch to letter W directly!
+7. Make gesture     → Capture 15-20 samples with ENTER
+8. Press 2          → Trains model with automatic outlier removal
+9. Press 1          → Exit training mode
+10. Test gestures!  → Model recognizes your trained letters
+```
+
+### Alternative: Number Keys Method
+```
+Use keys 3-9 and 0 to cycle through letter groups if you prefer
 ```
 
 ### 💡 Quick Tips
 
 - **Key 1**: Toggle training mode on/off
+- **Key T**: Enable direct A-Z typing (no more number pad!)
 - **Key 2**: Train the model
-- **Keys 3-9, 0**: Select letters (press same key to cycle)
+- **Keys 3-9, 0**: Select letters (press same key to cycle) - OR use T for direct A-Z
 - **Auto-Cropping**: Photos are automatically cropped to hand region only
 - **Debug Mode**: Press D to see detailed photo capture logs
 - **Stability**: Wait for green "stable" indicator before pressing ENTER
@@ -163,7 +170,15 @@ python3 src/asl_translator.py
 Press 1 → See "🎓 TRAINING MODE ACTIVATED" with number key guide
 ```
 
-### Step 2: Select a Letter Using Number Keys
+### Step 2A: Select a Letter Using Direct Typing (EASIER!)
+```
+1. Press T to enable direct letter typing
+2. Press V on your keyboard
+3. You'll see: "Selected letter: V"
+4. Much easier than number keys!
+```
+
+### Step 2B: Or Use Number Keys
 ```
 1. Press 4 to start with letter B (key 4 = B/L/V)
 2. Press 4 again to cycle to L

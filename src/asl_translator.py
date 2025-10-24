@@ -118,6 +118,7 @@ class ASLTranslator:
         
         # Learning Mode (RE-ENABLED for real training)
         self.learning_mode = False
+        self.direct_letter_mode = False  # Press T to enable A-Z keys directly
         self.current_training_letter = None  # Which letter we're currently training
         self.training_count = {}  # Count samples per letter
         self.learning_stage = 'capture'  # 'capture' or 'label'
@@ -1192,11 +1193,27 @@ class ASLTranslator:
                     else:
                         print("\n🔍 DEBUG MODE DISABLED - Clean output")
                 
+                # Direct letter typing mode (Press 'T') - TYPE LETTERS DIRECTLY
+                elif key == ord('t') or key == ord('T'):
+                    if self.learning_mode:
+                        self.direct_letter_mode = not self.direct_letter_mode
+                        if self.direct_letter_mode:
+                            print("\n⌨️  DIRECT LETTER MODE ENABLED")
+                            print("💡 Now you can press A-Z keys directly to select letters!")
+                            print("💡 Press T again to go back to number keys")
+                        else:
+                            print("\n⌨️  DIRECT LETTER MODE DISABLED")
+                            print("💡 Use number keys (3-9, 0) to select letters")
+                    else:
+                        print("\n⚠️  You must be in training mode first!")
+                        print("💡 Press 1 to enter training mode")
+                
                 # Learning mode (Press '1') - ENTER TRAINING MODE
                 elif key == 49:  # Key '1'
                     self.learning_mode = not self.learning_mode
                     if not self.learning_mode:
                         self.current_training_letter = None
+                        self.direct_letter_mode = False  # Reset when exiting
                         print("\n❌ Training mode deactivated")
                         print("💡 Press 1 again to re-enter training mode")
                     else:
@@ -1204,10 +1221,10 @@ class ASLTranslator:
                         print("🎓 TRAINING MODE ACTIVATED")
                         print("=" * 60)
                         print("📝 Instructions:")
-                        print("  • Press NUMBER keys (3-9, 0) to select letters:")
+                        print("  • Press T to enable DIRECT LETTER TYPING (A-Z keys)")
+                        print("  • OR use NUMBER keys (3-9, 0) to select letters:")
                         print("    3=A/K/U  4=B/L/V  5=C/M/W  6=D/N/X  7=E/O/Y")
                         print("    8=F/P/Z  9=G/Q    0=H/R/I/S/J/T")
-                        print("  • Press same number to cycle through letters")
                         print("  • Make ASL sign and hold steady")
                         print("  • Press ENTER repeatedly to capture 15-20 samples")
                         print("  • Press 2 when done to TRAIN THE MODEL")
@@ -1251,8 +1268,16 @@ class ASLTranslator:
                             print("❌ Training failed - need more samples")
                             print("💡 TIP: Capture at least 10 samples for 2+ different letters")
                 
+                # Handle A-Z key presses in DIRECT LETTER MODE
+                elif self.learning_mode and self.direct_letter_mode and (65 <= key <= 90 or 97 <= key <= 122):
+                    letter = chr(key).upper()
+                    self.current_training_letter = letter
+                    count = self.training_count.get(letter, 0)
+                    print(f"\n🎯 Selected letter: {letter} (Current samples: {count})")
+                    print("💡 Make the gesture and press ENTER to capture")
+                
                 # Handle NUMBER key presses in learning mode (3-9, 0 to select letters)
-                elif self.learning_mode and (48 == key or (51 <= key <= 57)):  # Keys 0, 3-9
+                elif self.learning_mode and not self.direct_letter_mode and (48 == key or (51 <= key <= 57)):  # Keys 0, 3-9
                     number = key - 48  # Convert to 0-9
                     
                     # Skip keys 1 and 2 (they're commands)
@@ -1316,8 +1341,11 @@ class ASLTranslator:
                                 # IMPROVED PHOTO CAPTURE - Only hand region, no overlays
                                 photo_saved = False
                                 photo_path = None
+                                
+                                # Always show photo capture attempt
+                                print(f"\n📸 Capturing photo for {self.current_training_letter}...")
                                 if self.debug_mode:
-                                    print(f"\n🔍 DEBUG: Starting photo capture for {self.current_training_letter}")
+                                    print(f"🔍 DEBUG: Starting photo capture for {self.current_training_letter}")
                                 try:
                                     import os
                                     import datetime
