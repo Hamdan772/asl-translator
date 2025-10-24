@@ -126,18 +126,17 @@ class ASLTranslator:
         self.ml_confidence_threshold = 0.70  # Use ML if confidence > 70%
         self.ml_enabled = False  # ML needs to be trained first
         
-        # Number-to-Letter mapping for training (0-9 keys cycle through A-Z)
+        # Number-to-Letter mapping for training (Keys 3-9, 0)
+        # Key 1 = Toggle training mode, Key 2 = Train model
         self.number_to_letters = {
-            0: ['A', 'K', 'U'],   # Key 0: cycles through A, K, U
-            1: ['B', 'L', 'V'],   # Key 1: cycles through B, L, V
-            2: ['C', 'M', 'W'],   # Key 2: cycles through C, M, W
-            3: ['D', 'N', 'X'],   # Key 3: cycles through D, N, X
-            4: ['E', 'O', 'Y'],   # Key 4: cycles through E, O, Y
-            5: ['F', 'P', 'Z'],   # Key 5: cycles through F, P, Z
-            6: ['G', 'Q'],        # Key 6: cycles through G, Q
-            7: ['H', 'R'],        # Key 7: cycles through H, R
-            8: ['I', 'S'],        # Key 8: cycles through I, S
-            9: ['J', 'T'],        # Key 9: cycles through J, T
+            3: ['A', 'K', 'U'],   # Key 3: cycles through A, K, U
+            4: ['B', 'L', 'V'],   # Key 4: cycles through B, L, V
+            5: ['C', 'M', 'W'],   # Key 5: cycles through C, M, W
+            6: ['D', 'N', 'X'],   # Key 6: cycles through D, N, X
+            7: ['E', 'O', 'Y'],   # Key 7: cycles through E, O, Y
+            8: ['F', 'P', 'Z'],   # Key 8: cycles through F, P, Z
+            9: ['G', 'Q'],        # Key 9: cycles through G, Q
+            0: ['H', 'R', 'I', 'S', 'J', 'T'],  # Key 0: cycles through H, R, I, S, J, T
         }
         self.current_number_index = {}  # Track which letter in the cycle for each number
         
@@ -265,9 +264,9 @@ class ASLTranslator:
                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (100, 100, 255), 1, cv2.LINE_AA)
         
         # Number key mapping guide
-        cv2.putText(img_out, "TRAINING: Use number keys 0-9 to select letters:", (80, h - 130), 
+        cv2.putText(img_out, "TRAINING: Press 1 to enter training | Press 2 to train model", (80, h - 130), 
                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, self.color_primary, 1, cv2.LINE_AA)
-        cv2.putText(img_out, "0=A/K/U  1=B/L/V  2=C/M/W  3=D/N/X  4=E/O/Y  5=F/P/Z  6=G/Q  7=H/R  8=I/S  9=J/T", (80, h - 105), 
+        cv2.putText(img_out, "Letters: 3=A/K/U 4=B/L/V 5=C/M/W 6=D/N/X 7=E/O/Y 8=F/P/Z 9=G/Q 0=H/R/I/S/J/T", (80, h - 105), 
                    cv2.FONT_HERSHEY_SIMPLEX, 0.55, self.color_text, 1, cv2.LINE_AA)
         
         cv2.putText(img_out, "Press 'H' to close help", (w // 2 - 150, h - 80), 
@@ -821,15 +820,15 @@ class ASLTranslator:
         print("  • H - Show/hide help guide")
         print("  • S - Show/hide statistics")
         print("\n⌨️  TRAINING CONTROLS:")
-        print("  • T - Enter TRAINING MODE")
-        print("  • 0-9 - Select letters to train (cycles through letter groups)")
-        print("    0=A/K/U  1=B/L/V  2=C/M/W  3=D/N/X  4=E/O/Y")
-        print("    5=F/P/Z  6=G/Q    7=H/R    8=I/S    9=J/T")
-        print("  • ENTER - Capture training sample (auto-crops hand photo)")
-        print("  • M - Train ML model (auto-removes outliers)")
-        print("  • B - Bulk train (advanced outlier removal)")
+        print("  • 1 - Toggle TRAINING MODE (enter/exit)")
+        print("  • 2 - TRAIN MODEL (auto-removes outliers)")
+        print("  • 3-9, 0 - Select letters to train:")
+        print("    3=A/K/U  4=B/L/V  5=C/M/W  6=D/N/X  7=E/O/Y")
+        print("    8=F/P/Z  9=G/Q    0=H/R/I/S/J/T")
+        print("  • ENTER - Capture sample (auto-crops hand photo)")
+        print("  • B - Bulk train (advanced)")
         print("  • N - Show ML statistics")
-        print("  • D - Toggle DEBUG mode (for troubleshooting)")
+        print("  • D - Toggle DEBUG mode")
         print("\n⌨️  EXIT:")
         print("  • ESC - Save & quit")
         print("  • Q - Quit without saving")
@@ -1193,32 +1192,32 @@ class ASLTranslator:
                     else:
                         print("\n🔍 DEBUG MODE DISABLED - Clean output")
                 
-                # Learning mode (Press 'T') - SIMPLIFIED TRAINING
-                elif key == ord('t') or key == ord('T'):
+                # Learning mode (Press '1') - ENTER TRAINING MODE
+                elif key == 49:  # Key '1'
                     self.learning_mode = not self.learning_mode
                     if not self.learning_mode:
                         self.current_training_letter = None
-                        print("\n❌ Learning mode deactivated")
-                        print("💡 Press T again to re-enter learning mode")
+                        print("\n❌ Training mode deactivated")
+                        print("💡 Press 1 again to re-enter training mode")
                     else:
                         print("\n" + "=" * 60)
-                        print("🎓 LEARNING MODE ACTIVATED")
+                        print("🎓 TRAINING MODE ACTIVATED")
                         print("=" * 60)
                         print("📝 Instructions:")
-                        print("  1. Press NUMBER keys (0-9) to select letters:")
-                        print("     0=A/K/U  1=B/L/V  2=C/M/W  3=D/N/X  4=E/O/Y")
-                        print("     5=F/P/Z  6=G/Q    7=H/R    8=I/S    9=J/T")
-                        print("  2. Press same number again to cycle through letters")
-                        print("  3. Make the ASL sign and hold it steady")
-                        print("  4. Press ENTER repeatedly to capture 15-20 samples")
-                        print("  5. Press M or B when done to train the model")
-                        print("  6. Press T to exit learning mode")
-                        print("\n💡 TIP: Photos are automatically cropped to hand region!")
+                        print("  • Press NUMBER keys (3-9, 0) to select letters:")
+                        print("    3=A/K/U  4=B/L/V  5=C/M/W  6=D/N/X  7=E/O/Y")
+                        print("    8=F/P/Z  9=G/Q    0=H/R/I/S/J/T")
+                        print("  • Press same number to cycle through letters")
+                        print("  • Make ASL sign and hold steady")
+                        print("  • Press ENTER repeatedly to capture 15-20 samples")
+                        print("  • Press 2 when done to TRAIN THE MODEL")
+                        print("  • Press 1 to exit training mode")
+                        print("\n💡 TIP: Photos auto-cropped to hand region only!")
                         print("=" * 60)
                 
-                # Train ML model with automatic outlier removal (Press 'M') - Check BEFORE letter key handling
-                elif key == ord('m') or key == ord('M'):
-                    print("\n🧠 Training ML model with automatic outlier removal...")
+                # Train ML model (Press '2') - TRAIN MODEL
+                elif key == 50:  # Key '2'
+                    print("\n🧠 TRAINING MODEL (with automatic outlier removal)...")
                     if self.load_ml_trainer():
                         result = self.ml_trainer.bulk_train_with_outlier_removal()
                         # Result is a tuple (accuracy, outliers_dict)
@@ -1252,14 +1251,19 @@ class ASLTranslator:
                             print("❌ Training failed - need more samples")
                             print("💡 TIP: Capture at least 10 samples for 2+ different letters")
                 
-                # Handle NUMBER key presses in learning mode (0-9 to select letters)
-                elif self.learning_mode and 48 <= key <= 57:  # 0-9 number keys
+                # Handle NUMBER key presses in learning mode (3-9, 0 to select letters)
+                elif self.learning_mode and (48 == key or (51 <= key <= 57)):  # Keys 0, 3-9
                     number = key - 48  # Convert to 0-9
+                    
+                    # Skip keys 1 and 2 (they're commands)
+                    if number in [1, 2]:
+                        continue
                     
                     # Get available letters for this number
                     available_letters = self.number_to_letters.get(number, [])
                     if not available_letters:
-                        print(f"⚠️  No letters mapped to number {number}")
+                        print(f"⚠️  No letters mapped to key {number}")
+                        print("💡 Use keys 3-9 or 0 to select letters")
                         continue
                     
                     # Cycle through letters for this number
@@ -1276,13 +1280,14 @@ class ASLTranslator:
                     letters_str = " → ".join(available_letters)
                     print(f"\n🎯 Key {number}: {letters_str}")
                     print(f"   Now training: {letter} (Current samples: {count})")
-                    print("💡 Press {number} again to cycle, or press ENTER to capture")
+                    print(f"💡 Press {number} again to cycle, or press ENTER to capture")
                 
                 # Warning if number key pressed while NOT in learning mode
-                elif not self.learning_mode and 48 <= key <= 57:
+                elif not self.learning_mode and (48 == key or (51 <= key <= 57)):
                     number = key - 48
-                    print(f"\n⚠️  Number '{number}' pressed but NOT in training mode!")
-                    print("💡 Press T to enter LEARNING MODE first")
+                    if number not in [1, 2]:  # Don't warn for commands
+                        print(f"\n⚠️  Key '{number}' pressed but NOT in training mode!")
+                        print("💡 Press 1 to enter TRAINING MODE first")
                 
                 # Handle ENTER key to capture gesture in learning mode
                 elif self.learning_mode and key == 13 and self.current_training_letter:  # ENTER key

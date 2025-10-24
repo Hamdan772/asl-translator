@@ -104,11 +104,11 @@ python3 src/asl_translator.py
 
 | Key | Action | Description |
 |-----|--------|-------------|
-| **T** | Toggle training mode | Enters/exits learning mode |
-| **0-9** | Select letters to train | Number keys cycle through letter groups (see mapping below) |
-| **ENTER** | Capture training sample | Saves **auto-cropped hand photo** + gesture data |
-| **M** | Train ML model | Trains neural network and **automatically removes anomalous samples** |
-| **B** | Bulk train (advanced) | Alternative training method with outlier removal |
+| **1** | Toggle training mode | Enters/exits training mode |
+| **2** | Train model | Trains neural network and **automatically removes anomalous samples** |
+| **3-9, 0** | Select letter to train | Choose which letter group to cycle through |
+| **ENTER** | Capture training sample | Saves auto-cropped hand photo with data |
+| **B** | Bulk train (advanced) | Alternative training method |
 | **N** | Show ML statistics | Displays training data distribution |
 | **D** | Toggle debug mode | Enables/disables detailed logging |
 
@@ -130,22 +130,24 @@ python3 src/asl_translator.py
 ### 🎯 Training Mode Workflow
 
 ```
-1. Press T          → Enter training mode
-2. Press 1          → Selects letter B (first in group 1)
-3. Press 1 again    → Cycles to letter L
-4. Press 1 again    → Cycles to letter V ✓
+1. Press 1          → Enter training mode
+2. Press 4          → Selects letter B (first in group 4)
+3. Press 4 again    → Cycles to letter L
+4. Press 4 again    → Cycles to letter V ✓
 5. Make V gesture   → Hold hand steady
 6. Press ENTER      → Captures cropped hand photo + data (repeat 15-20 times)
-7. Press 2          → Switch to letter C (or press again for M or W)
+7. Press 5          → Switch to letter C (or press again for M or W)
 8. Make gesture     → Capture 15-20 samples with ENTER
-9. Press M          → Trains model with automatic outlier removal
-10. Press T         → Exit training mode
+9. Press 2          → Trains model with automatic outlier removal
+10. Press 1         → Exit training mode
 11. Test gestures!  → Model recognizes your trained letters
 ```
 
 ### 💡 Quick Tips
 
-- **Number Keys**: Use 0-9 to select letters (press same number to cycle)
+- **Key 1**: Toggle training mode on/off
+- **Key 2**: Train the model
+- **Keys 3-9, 0**: Select letters (press same key to cycle)
 - **Auto-Cropping**: Photos are automatically cropped to hand region only
 - **Debug Mode**: Press D to see detailed photo capture logs
 - **Stability**: Wait for green "stable" indicator before pressing ENTER
@@ -158,15 +160,15 @@ python3 src/asl_translator.py
 
 ### Step 1: Enter Training Mode
 ```
-Press T → See "🎓 LEARNING MODE ACTIVATED" with number key guide
+Press 1 → See "🎓 TRAINING MODE ACTIVATED" with number key guide
 ```
 
 ### Step 2: Select a Letter Using Number Keys
 ```
-1. Press 1 to start with letter B (key 1 = B/L/V)
-2. Press 1 again to cycle to L
-3. Press 1 again to cycle to V ✓ (victory sign)
-4. You'll see: "Key 1: B → L → V"
+1. Press 4 to start with letter B (key 4 = B/L/V)
+2. Press 4 again to cycle to L
+3. Press 4 again to cycle to V ✓ (victory sign)
+4. You'll see: "Key 4: B → L → V"
             "Now training: V"
 ```
 
@@ -181,23 +183,23 @@ Press T → See "🎓 LEARNING MODE ACTIVATED" with number key guide
 
 ### Step 4: Train More Letters
 ```
-1. Press 2 to select C/M/W group
-2. Press 2 twice more to get to W
+1. Press 5 to select C/M/W group
+2. Press 5 twice more to get to W
 3. Make W gesture
 4. Press ENTER 15-20 times
-5. Continue with other number keys (0-9)
+5. Continue with other number keys (3-9, 0)
 ```
 
-### Step 4: Train the Model
+### Step 5: Train the Model
 ```
-Press M → Automatically removes anomalous samples and trains
+Press 2 → Automatically removes anomalous samples and trains
 Watch for: "🧹 Outliers removed: X"
 Watch for: "✅ Training accuracy: XX%"
 ```
 
-### Step 5: Test Recognition
+### Step 6: Exit and Test
 ```
-1. Press T to exit training mode
+1. Press 1 to exit training mode
 2. Show your trained gestures
 3. Watch real-time detection!
 ```
