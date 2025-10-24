@@ -1191,12 +1191,14 @@ class ASLTranslator:
                         print("   letter keys to switch between training letters.")
                         print("=" * 60)
                 
-                # Train ML model (Press 'M') - Check BEFORE letter key handling
+                # Train ML model with automatic outlier removal (Press 'M') - Check BEFORE letter key handling
                 elif key == ord('m') or key == ord('M'):
-                    print("\n🧠 Training ML model...")
+                    print("\n🧠 Training ML model with automatic outlier removal...")
                     if self.load_ml_trainer():
-                        accuracy = self.ml_trainer.train_model()
-                        if accuracy:
+                        result = self.ml_trainer.bulk_train_with_outlier_removal()
+                        # Result is a tuple (accuracy, outliers_dict)
+                        if result and result[0]:  # Check if accuracy is not None
+                            accuracy, outliers = result
                             self.ml_enabled = True
                             self.learning_mode = False  # Exit learning mode
                             self.current_training_letter = None

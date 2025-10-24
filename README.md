@@ -1,6 +1,6 @@
-# 🤟 ASL Translator - Advanced Real-Time Sign Language Recognition
-
 <div align="center">
+
+# 🤟 ASL Translator
 
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10.8-green.svg)](https://mediapipe.dev/)
@@ -107,8 +107,8 @@ python3 src/asl_translator.py
 | **T** | Toggle training mode | Enters/exits learning mode |
 | **A-Z** | Select letter to train | Choose which letter to capture (in training mode) |
 | **ENTER** | Capture training sample | Saves current hand gesture with photo |
-| **M** | Train ML model (standard) | Trains neural network with all samples |
-| **B** | Bulk train (advanced) | Trains model after removing outlier samples |
+| **M** | Train ML model | Trains neural network and **automatically removes anomalous samples** |
+| **B** | Bulk train (advanced) | Alternative training method with outlier removal |
 | **N** | Show ML statistics | Displays training data distribution |
 | **D** | Toggle debug mode | Enables/disables detailed logging |
 
@@ -162,7 +162,8 @@ Press T → See "🎓 LEARNING MODE ACTIVATED"
 
 ### Step 4: Train the Model
 ```
-Press M → Wait for training completion
+Press M → Automatically removes anomalous samples and trains
+Watch for: "🧹 Outliers removed: X"
 Watch for: "✅ Training accuracy: XX%"
 ```
 
