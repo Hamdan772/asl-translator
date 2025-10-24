@@ -105,30 +105,48 @@ python3 src/asl_translator.py
 | Key | Action | Description |
 |-----|--------|-------------|
 | **T** | Toggle training mode | Enters/exits learning mode |
-| **A-Z** | Select letter to train | Choose which letter to capture (in training mode) |
-| **ENTER** | Capture training sample | Saves current hand gesture with photo |
+| **0-9** | Select letters to train | Number keys cycle through letter groups (see mapping below) |
+| **ENTER** | Capture training sample | Saves **auto-cropped hand photo** + gesture data |
 | **M** | Train ML model | Trains neural network and **automatically removes anomalous samples** |
 | **B** | Bulk train (advanced) | Alternative training method with outlier removal |
 | **N** | Show ML statistics | Displays training data distribution |
 | **D** | Toggle debug mode | Enables/disables detailed logging |
 
+### 🔢 Number-to-Letter Mapping
+
+| Number | Letters | Description |
+|--------|---------|-------------|
+| **0** | A → K → U | Press 0 repeatedly to cycle through A, K, U |
+| **1** | B → L → V | Press 1 repeatedly to cycle through B, L, V |
+| **2** | C → M → W | Press 2 repeatedly to cycle through C, M, W |
+| **3** | D → N → X | Press 3 repeatedly to cycle through D, N, X |
+| **4** | E → O → Y | Press 4 repeatedly to cycle through E, O, Y |
+| **5** | F → P → Z | Press 5 repeatedly to cycle through F, P, Z |
+| **6** | G → Q | Press 6 repeatedly to cycle through G, Q |
+| **7** | H → R | Press 7 repeatedly to cycle through H, R |
+| **8** | I → S | Press 8 repeatedly to cycle through I, S |
+| **9** | J → T | Press 9 repeatedly to cycle through J, T |
+
 ### 🎯 Training Mode Workflow
 
 ```
 1. Press T          → Enter training mode
-2. Press V          → Select letter V
-3. Make V gesture   → Hold hand steady
-4. Press ENTER      → Capture sample (repeat 15-20 times)
-5. Press W          → Switch to letter W
-6. Make W gesture   → Capture 15-20 samples
-7. Press M          → Train the model
-8. Press T          → Exit training mode
-9. Test gestures!   → Model recognizes V and W
+2. Press 1          → Selects letter B (first in group 1)
+3. Press 1 again    → Cycles to letter L
+4. Press 1 again    → Cycles to letter V ✓
+5. Make V gesture   → Hold hand steady
+6. Press ENTER      → Captures cropped hand photo + data (repeat 15-20 times)
+7. Press 2          → Switch to letter C (or press again for M or W)
+8. Make gesture     → Capture 15-20 samples with ENTER
+9. Press M          → Trains model with automatic outlier removal
+10. Press T         → Exit training mode
+11. Test gestures!  → Model recognizes your trained letters
 ```
 
 ### 💡 Quick Tips
 
-- **Training Mode**: Stay in training mode when switching between letters (just press different letter keys)
+- **Number Keys**: Use 0-9 to select letters (press same number to cycle)
+- **Auto-Cropping**: Photos are automatically cropped to hand region only
 - **Debug Mode**: Press D to see detailed photo capture logs
 - **Stability**: Wait for green "stable" indicator before pressing ENTER
 - **Variations**: Capture samples from different angles for better accuracy
@@ -140,24 +158,34 @@ python3 src/asl_translator.py
 
 ### Step 1: Enter Training Mode
 ```
-Press T → See "🎓 LEARNING MODE ACTIVATED"
+Press T → See "🎓 LEARNING MODE ACTIVATED" with number key guide
 ```
 
-### Step 2: Train Your First Letter
+### Step 2: Select a Letter Using Number Keys
 ```
-1. Press V (for victory sign)
-2. Make the V gesture with your hand
-3. Hold steady until "stable" indicator appears
-4. Press ENTER to capture
-5. Repeat 15-20 times with slight variations
+1. Press 1 to start with letter B (key 1 = B/L/V)
+2. Press 1 again to cycle to L
+3. Press 1 again to cycle to V ✓ (victory sign)
+4. You'll see: "Key 1: B → L → V"
+            "Now training: V"
 ```
 
-### Step 3: Train More Letters
+### Step 3: Capture Training Samples
 ```
-1. Press W (without exiting training mode)
-2. Make the W gesture
-3. Press ENTER 15-20 times
-4. Continue with other letters (A, B, C, etc.)
+1. Make the V gesture with your hand
+2. Hold steady until "stable" indicator appears
+3. Press ENTER to capture (auto-crops hand region!)
+4. Repeat 15-20 times with slight variations
+5. Photos saved to training_photos/V/
+```
+
+### Step 4: Train More Letters
+```
+1. Press 2 to select C/M/W group
+2. Press 2 twice more to get to W
+3. Make W gesture
+4. Press ENTER 15-20 times
+5. Continue with other number keys (0-9)
 ```
 
 ### Step 4: Train the Model
@@ -174,12 +202,15 @@ Watch for: "✅ Training accuracy: XX%"
 3. Watch real-time detection!
 ```
 
-### 📸 Photo Capture
+### 📸 Automatic Photo Capture (Improved!)
 During training, the system automatically:
-- Captures cropped hand images
-- Saves to `training_photos/[LETTER]/`
+- **Detects hand bounding box** from MediaPipe landmarks
+- **Crops to hand region only** (no background clutter!)
+- **Adds 40px padding** around hand for better context
+- **Saves cropped JPG** to `training_photos/[LETTER]/`
+- **Extracts HOG features** (324 features) for visual recognition
 - Records finger states (which fingers are UP/DOWN)
-- Stores geometric features (spacing, angles)
+- Stores geometric features (spacing, angles, ratios)
 
 ---
 
