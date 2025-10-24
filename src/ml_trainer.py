@@ -156,6 +156,12 @@ class MLTrainer:
         try:
             print(f"🧠 Training model on {len(self.training_data)} samples...")
             
+            # Show training data distribution
+            stats = self.get_statistics()
+            print("📊 Training data distribution:")
+            for letter in sorted(stats.keys()):
+                print(f"   {letter}: {stats[letter]} samples")
+            
             # Prepare data
             X = np.array([s['landmarks'] for s in self.training_data])
             y = np.array([s['label'] for s in self.training_data])
@@ -266,6 +272,18 @@ class MLTrainer:
             prediction = self.model.predict(X_scaled)[0]
             probabilities = self.model.predict_proba(X_scaled)[0]
             confidence = max(probabilities)
+            
+            # DEBUG: Show all class probabilities
+            class_labels = self.model.classes_
+            prob_dict = {label: prob for label, prob in zip(class_labels, probabilities)}
+            sorted_probs = sorted(prob_dict.items(), key=lambda x: x[1], reverse=True)
+            
+            # Print top 3 predictions for debugging
+            print(f"🔍 Predictions: ", end="")
+            for i, (label, prob) in enumerate(sorted_probs[:3]):
+                marker = "✅" if i == 0 else "  "
+                print(f"{marker}{label}:{prob:.1%} ", end="")
+            print()
             
             return prediction, confidence
             

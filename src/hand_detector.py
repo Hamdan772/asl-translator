@@ -26,13 +26,14 @@ class HandDetector:
         self.detection_con = detection_con
         self.track_con = track_con
         
-        # Initialize MediaPipe hands with higher confidence thresholds
+        # Initialize MediaPipe hands with OPTIMIZED settings for speed
         self.mp_hands = mp.solutions.hands
         self.hands = self.mp_hands.Hands(
             static_image_mode=self.mode,
             max_num_hands=self.max_hands,
             min_detection_confidence=self.detection_con,
-            min_tracking_confidence=self.track_con
+            min_tracking_confidence=self.track_con,
+            model_complexity=0  # 0=Lite (faster), 1=Full (slower but more accurate)
         )
         self.mp_draw = mp.solutions.drawing_utils
         
@@ -55,17 +56,23 @@ class HandDetector:
         self.wave_cooldown = 3.0  # Seconds between wave detections
         self.last_wave_time = 0
         
-    def find_hands(self, img, draw=True):
+    def find_hands(self, img, draw=True, enhance_visual=True):
         """
-        Find hands in the image
+        Find hands in the image with optimized visual quality
         
         Args:
             img: Input image (BGR format)
             draw: Whether to draw landmarks on the image
+            enhance_visual: Whether to enhance brightness/contrast for better visibility
             
         Returns:
             Image with landmarks drawn (if draw=True)
         """
+        # OPTIMIZED: Lighter enhancement for better FPS
+        if enhance_visual:
+            # Quick brightness boost only (faster than filter2D)
+            img = cv2.convertScaleAbs(img, alpha=1.15, beta=15)
+        
         # Convert to RGB for MediaPipe
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         self.results = self.hands.process(img_rgb)
@@ -74,13 +81,37 @@ class HandDetector:
         if self.results.multi_hand_landmarks and draw:
             h, w, c = img.shape
             for hand_landmarks in self.results.multi_hand_landmarks:
-                # Draw the base landmarks and connections
+                # Calculate hand bounding box for highlighting
+                x_coords = [lm.x for lm in hand_landmarks.landmark]
+                y_coords = [lm.y for lm in hand_landmarks.landmark]
+                
+                x_min, x_max = int(min(x_coords) * w), int(max(x_coords) * w)
+                y_min, y_max = int(min(y_coords) * h), int(max(y_coords) * h)
+                
+                # Add padding to bounding box
+                padding = 40
+                x_min = max(0, x_min - padding)
+                y_min = max(0, y_min - padding)
+                x_max = min(w, x_max + padding)
+                y_max = min(h, y_max + padding)
+                
+                # Draw semi-transparent highlight around hand region
+                overlay = img.copy()
+                cv2.rectangle(overlay, (x_min, y_min), (x_max, y_max), (0, 255, 0), 3)
+                cv2.addWeighted(overlay, 0.3, img, 0.7, 0, img)
+                
+                # Draw subtle filled rectangle as background for better dot visibility
+                overlay2 = img.copy()
+                cv2.rectangle(overlay2, (x_min, y_min), (x_max, y_max), (255, 255, 255), -1)
+                cv2.addWeighted(overlay2, 0.05, img, 0.95, 0, img)
+                
+                # Draw the base landmarks and connections with BRIGHTER colors
                 self.mp_draw.draw_landmarks(
                     img, 
                     hand_landmarks, 
                     self.mp_hands.HAND_CONNECTIONS,
-                    self.mp_draw.DrawingSpec(color=(0, 255, 0), thickness=2, circle_radius=3),
-                    self.mp_draw.DrawingSpec(color=(0, 255, 255), thickness=2, circle_radius=2)
+                    self.mp_draw.DrawingSpec(color=(0, 255, 0), thickness=3, circle_radius=5),  # Larger green landmarks
+                    self.mp_draw.DrawingSpec(color=(0, 255, 255), thickness=3, circle_radius=2)  # Thicker cyan connections
                 )
                 
                 # ADD MORE DOTS: Draw intermediate dots along each connection
@@ -94,12 +125,26 @@ class HandDetector:
                     start_x, start_y = int(start_landmark.x * w), int(start_landmark.y * h)
                     end_x, end_y = int(end_landmark.x * w), int(end_landmark.y * h)
                     
-                    # Draw 3 intermediate dots along each connection line
-                    for i in range(1, 4):
-                        t = i / 4.0  # Position along the line (0.25, 0.5, 0.75)
+                    # Draw 5 intermediate dots along each connection line (100 extra dots total!)
+                    for i in range(1, 6):
+                        t = i / 6.0  # Position along the line (0.167, 0.333, 0.5, 0.667, 0.833)
                         mid_x = int(start_x + (end_x - start_x) * t)
                         mid_y = int(start_y + (end_y - start_y) * t)
-                        cv2.circle(img, (mid_x, mid_y), 2, (0, 200, 255), -1)  # Small cyan dots
+                        cv2.circle(img, (mid_x, mid_y), 3, (255, 255, 0), -1)  # Brighter YELLOW dots, slightly larger
+                
+                # Label key fingertips for easy identification
+                finger_names = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
+                finger_tips = [4, 8, 12, 16, 20]
+                
+                for name, tip_idx in zip(finger_names, finger_tips):
+                    tip = hand_landmarks.landmark[tip_idx]
+                    tip_x, tip_y = int(tip.x * w), int(tip.y * h)
+                    
+                    # Draw finger label above fingertip
+                    cv2.putText(img, name, (tip_x - 30, tip_y - 15),
+                               cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 2, cv2.LINE_AA)
+                    cv2.putText(img, name, (tip_x - 30, tip_y - 15),
+                               cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 0, 255), 1, cv2.LINE_AA)
         
         return img
     
@@ -383,3 +428,159 @@ class HandDetector:
         features = normalized.flatten()
         
         return features
+    
+    def get_finger_states(self, landmarks):
+        """
+        Analyze which fingers are extended (UP) vs curled (DOWN)
+        
+        Args:
+            landmarks: List of landmarks [[id, x, y], ...]
+            
+        Returns:
+            Dictionary with finger names and boolean states (True = UP, False = DOWN)
+        """
+        if len(landmarks) < 21:
+            return None
+        
+        # Finger tip indices: [thumb, index, middle, ring, pinky]
+        tip_indices = [4, 8, 12, 16, 20]
+        # Finger base indices (knuckles)
+        base_indices = [2, 5, 9, 13, 17]
+        # Mid-joint indices for angle calculation
+        mid_indices = [3, 6, 10, 14, 18]
+        
+        finger_states = {}
+        finger_names = ['thumb', 'index', 'middle', 'ring', 'pinky']
+        
+        wrist = np.array([landmarks[0][1], landmarks[0][2]])
+        
+        for i, (tip_idx, mid_idx, base_idx, name) in enumerate(zip(tip_indices, mid_indices, base_indices, finger_names)):
+            tip = np.array([landmarks[tip_idx][1], landmarks[tip_idx][2]])
+            mid = np.array([landmarks[mid_idx][1], landmarks[mid_idx][2]])
+            base = np.array([landmarks[base_idx][1], landmarks[base_idx][2]])
+            
+            if name == 'thumb':
+                # IMPROVED THUMB DETECTION using angle method
+                # Thumb is special - it moves perpendicular to other fingers
+                # Check if thumb tip is far from palm center (landmark 9)
+                palm_center = np.array([landmarks[9][1], landmarks[9][2]])
+                
+                # Vector from thumb base to tip
+                thumb_vector = tip - base
+                # Vector from wrist to palm center
+                palm_vector = palm_center - wrist
+                
+                # Thumb is extended if:
+                # 1. Tip is far from palm center
+                # 2. Thumb vector is long (thumb stretched out)
+                tip_to_palm_dist = np.linalg.norm(tip - palm_center)
+                thumb_length = np.linalg.norm(thumb_vector)
+                base_to_palm_dist = np.linalg.norm(base - palm_center)
+                
+                # More lenient thumb detection
+                is_extended = (tip_to_palm_dist > base_to_palm_dist * 1.1) and (thumb_length > base_to_palm_dist * 0.5)
+                finger_states[name] = is_extended
+            else:
+                # For other fingers, use improved angle + distance method
+                # Calculate vectors
+                v1 = mid - base  # Base to mid-joint
+                v2 = tip - mid   # Mid-joint to tip
+                
+                # Calculate angle between joints (0 = straight, 180 = curled back)
+                dot_product = np.dot(v1, v2)
+                norms = np.linalg.norm(v1) * np.linalg.norm(v2)
+                
+                if norms > 0:
+                    cos_angle = np.clip(dot_product / norms, -1.0, 1.0)
+                    angle = np.arccos(cos_angle) * 180 / np.pi
+                else:
+                    angle = 0
+                
+                # Also check distance from wrist
+                tip_dist = np.linalg.norm(tip - wrist)
+                base_dist = np.linalg.norm(base - wrist)
+                extension_ratio = tip_dist / (base_dist + 0.001)
+                
+                # Finger is extended if:
+                # 1. Angle is relatively straight (< 160 degrees)
+                # 2. Tip is farther from wrist than base
+                is_extended = (angle < 160) and (extension_ratio > 1.15)
+                finger_states[name] = is_extended
+        
+        return finger_states
+    
+    def draw_finger_state_indicator(self, img, landmarks, x_offset=10, y_offset=200):
+        """
+        Draw a visual indicator showing which fingers are UP/DOWN
+        
+        Args:
+            img: Image to draw on
+            landmarks: List of landmarks [[id, x, y], ...]
+            x_offset: X position for the indicator
+            y_offset: Y position for the indicator
+            
+        Returns:
+            Image with finger state indicator drawn
+        """
+        finger_states = self.get_finger_states(landmarks)
+        
+        if not finger_states:
+            return img
+        
+        # Create semi-transparent background panel
+        panel_height = 180
+        panel_width = 250
+        overlay = img.copy()
+        cv2.rectangle(overlay, (x_offset, y_offset), (x_offset + panel_width, y_offset + panel_height),
+                     (40, 40, 40), -1)
+        cv2.addWeighted(overlay, 0.7, img, 0.3, 0, img)
+        
+        # Draw border
+        cv2.rectangle(img, (x_offset, y_offset), (x_offset + panel_width, y_offset + panel_height),
+                     (255, 255, 255), 2)
+        
+        # Title
+        cv2.putText(img, "FINGER STATUS", (x_offset + 10, y_offset + 25),
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
+        
+        # Draw each finger state
+        finger_display = [
+            ('Thumb', finger_states['thumb']),
+            ('Index', finger_states['index']),
+            ('Middle', finger_states['middle']),
+            ('Ring', finger_states['ring']),
+            ('Pinky', finger_states['pinky'])
+        ]
+        
+        y_pos = y_offset + 50
+        for name, is_up in finger_display:
+            # Choose color and emoji
+            if is_up:
+                color = (0, 255, 0)  # Green for UP
+                status = "UP   "
+                emoji = "👆"
+            else:
+                color = (100, 100, 100)  # Gray for DOWN
+                status = "DOWN"
+                emoji = "👇"
+            
+            # Draw finger name
+            cv2.putText(img, f"{name}:", (x_offset + 15, y_pos),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
+            
+            # Draw status with color
+            cv2.putText(img, status, (x_offset + 120, y_pos),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2, cv2.LINE_AA)
+            
+            # Draw emoji indicator
+            cv2.putText(img, emoji, (x_offset + 200, y_pos),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)
+            
+            y_pos += 25
+        
+        # Count fingers UP
+        fingers_up = sum(1 for _, is_up in finger_display if is_up)
+        cv2.putText(img, f"Count: {fingers_up}", (x_offset + 15, y_pos + 5),
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2, cv2.LINE_AA)
+        
+        return img

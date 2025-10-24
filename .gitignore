@@ -29,10 +29,23 @@ Thumbs.db
 
 # Project specific
 achievements.json
-recordings/
+recordings/*.avi
+recordings/*.mp4
 translations/
-*.avi
-*.mp4
+asl_model.pkl
+asl_model_scaler.pkl
+training_data.json
+training_photos/**/*.jpg
+training_photos/**/*.png
+*_OLD.md
+*_old.*
+*.bak
+*.tmp
+temp/
+
+# Keep directory structure
+!training_photos/.gitkeep
+!recordings/.gitkeep
 
 # Documentation archive
 docs/archive/

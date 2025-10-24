@@ -787,16 +787,24 @@ class ASLTranslator:
             return False
     
     def run(self):
-        """Main loop for the ASL translator with ENHANCED features"""
-        # Initialize webcam
+        """Main loop for the ASL translator with OPTIMIZED performance"""
+        # Initialize webcam with OPTIMIZED settings for better FPS
         cap = cv2.VideoCapture(0)
-        cap.set(3, 1280)  # Width
-        cap.set(4, 720)   # Height
+        cap.set(3, 960)   # Width: Reduced from 1280 for better FPS
+        cap.set(4, 540)   # Height: Reduced from 720 for better FPS
+        cap.set(cv2.CAP_PROP_FPS, 60)  # Request 60 FPS
+        cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # Minimize buffer lag
+        
+        # Get actual resolution
+        actual_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        actual_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        actual_fps = int(cap.get(cv2.CAP_PROP_FPS))
         
         print("=" * 60)
-        print("🚀 ASL Translator v2.0 - ML EDITION")
+        print("🚀 ASL Translator v2.0 - OPTIMIZED EDITION")
         print("=" * 60)
-        print("\n📹 Camera Mode: BACK OF HAND recognition")
+        print(f"\n📹 Camera: {actual_width}x{actual_height} @ {actual_fps} FPS (optimized)")
+        print("📹 Mode: BACK OF HAND recognition")
         print("\n⌨️  Controls:")
         print("  • Press SPACE to add space")
         print("  • Press BACKSPACE to delete last character")
@@ -819,12 +827,11 @@ class ASLTranslator:
         print("  • Wait 1.5 seconds before next letter (cooldown)")
         print("  • Make clear gestures for best results")
         print("  • Watch the progress indicator and gesture timeline")
-        print("\n🆕 Advanced Features:")
-        print("  • Practice mode - learn letters interactively")
-        print("  • Recording mode - save video of sessions")
-        print("  • Voice output - hear your text (TTS)")
-        print("  • Custom dictionary - save frequent words")
-        print("  • Performance analytics - track accuracy")
+        print("\n🆕 Performance Optimizations:")
+        print("  • Optimized resolution for smooth 60 FPS")
+        print("  • Lite MediaPipe model for faster processing")
+        print("  • Improved thumb detection algorithm")
+        print("  • Enhanced visual quality with minimal overhead")
         print("=" * 60)
         
         prev_time = 0
@@ -855,6 +862,9 @@ class ASLTranslator:
                     # Show training UI
                     h_learn, w_learn = img.shape[:2]
                     
+                    # Draw finger state indicator during training
+                    img = self.detector.draw_finger_state_indicator(img, landmarks, 10, 200)
+                    
                     if self.current_training_letter:
                         # Currently training a specific letter
                         count = self.training_count.get(self.current_training_letter, 0)
@@ -866,11 +876,22 @@ class ASLTranslator:
                         cv2.putText(img, f"Samples collected: {count}", (w_learn//2 - 150, 100),
                                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2, cv2.LINE_AA)
                         
+                        # Show expected finger states for A, V, W
+                        expected_hints = {
+                            'A': 'Expected: 0 fingers UP (closed fist)',
+                            'V': 'Expected: 2 fingers UP (Index + Middle)',
+                            'W': 'Expected: 3 fingers UP (Index + Middle + Ring)'
+                        }
+                        if self.current_training_letter in expected_hints:
+                            cv2.putText(img, expected_hints[self.current_training_letter], 
+                                       (w_learn//2 - 300, 130),
+                                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2, cv2.LINE_AA)
+                        
                         if self.detector.is_hand_stable:
-                            cv2.putText(img, "Press ENTER to capture this gesture!", (w_learn//2 - 250, 150),
+                            cv2.putText(img, "Press ENTER to capture this gesture!", (w_learn//2 - 250, 165),
                                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2, cv2.LINE_AA)
                         else:
-                            cv2.putText(img, "Hold STILL to capture...", (w_learn//2 - 200, 150),
+                            cv2.putText(img, "Hold STILL to capture...", (w_learn//2 - 200, 165),
                                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 165, 255), 2, cv2.LINE_AA)
                     else:
                         # No letter selected yet
@@ -1219,7 +1240,40 @@ class ASLTranslator:
                                     self.training_count[self.current_training_letter] = 0
                                 self.training_count[self.current_training_letter] += 1
                                 count = self.training_count[self.current_training_letter]
-                                print(f"✅ Captured! {self.current_training_letter}: {count} samples")
+                                
+                                # SAVE TRAINING PHOTOS
+                                try:
+                                    import os
+                                    import datetime
+                                    
+                                    # Create training_photos directory if it doesn't exist
+                                    photo_dir = "training_photos"
+                                    if not os.path.exists(photo_dir):
+                                        os.makedirs(photo_dir)
+                                    
+                                    # Create letter-specific subdirectory
+                                    letter_dir = os.path.join(photo_dir, self.current_training_letter)
+                                    if not os.path.exists(letter_dir):
+                                        os.makedirs(letter_dir)
+                                    
+                                    # Generate timestamp filename
+                                    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+                                    
+                                    # Save original frame (with dots)
+                                    filename_with_dots = os.path.join(letter_dir, f"{self.current_training_letter}_{count:03d}_{timestamp}_dots.jpg")
+                                    cv2.imwrite(filename_with_dots, img)
+                                    
+                                    # Save clean frame without dots (capture fresh frame)
+                                    success_clean, img_clean = cap.read()
+                                    if success_clean:
+                                        img_clean = cv2.flip(img_clean, 1)
+                                        filename_clean = os.path.join(letter_dir, f"{self.current_training_letter}_{count:03d}_{timestamp}_clean.jpg")
+                                        cv2.imwrite(filename_clean, img_clean)
+                                    
+                                    print(f"✅ Captured! {self.current_training_letter}: {count} samples (photos saved)")
+                                except Exception as e:
+                                    print(f"✅ Captured! {self.current_training_letter}: {count} samples (photo save failed: {e})")
+                                
                                 self.play_sound('success')
                                 
                                 # Suggest when to train
