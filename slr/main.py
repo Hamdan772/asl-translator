@@ -154,6 +154,10 @@ def main():
         TTS_HOLD_DURATION = 3.0  # seconds to hold before speaking
         
         #: -
+        #: Confidence threshold (0.0 to 1.0) - predictions below this are ignored
+        CONFIDENCE_THRESHOLD = 0.7  # 70% confidence required
+        
+        #: -
         #: Main Loop Start Here...
         while True:
             #: FPS of open cv frame or window
@@ -226,13 +230,18 @@ def main():
                     #: If in Logging Mode it will Log key-points or landmarks to the csv file
 
                     if MODE == 0:  #: Prediction Mode / Normal mode
-                        #: Hand sign classification
-                        hand_sign_id = keypoint_classifier(pre_processed_landmark_list)
+                        #: Hand sign classification with confidence
+                        hand_sign_id, confidence = keypoint_classifier(
+                            pre_processed_landmark_list, 
+                            confidence_threshold=CONFIDENCE_THRESHOLD
+                        )
 
                         if hand_sign_id == 25:
                             hand_sign_text = ""
+                            confidence_text = ""
                         else:
                             hand_sign_text = keypoint_classifier_labels[hand_sign_id]
+                            confidence_text = f"{confidence * 100:.1f}%"
 
                         #: -
                         #: TTS: Speak letter after holding same sign for 3 seconds
@@ -256,8 +265,8 @@ def main():
                             letter_start_time = None
                             letter_spoken = False
 
-                        #: Showing Result
-                        result_image = show_result(result_image, handedness, hand_sign_text)
+                        #: Showing Result with confidence
+                        result_image = show_result(result_image, handedness, hand_sign_text, confidence_text)
 
                     elif MODE == 1:  #: Logging Mode
                         log_keypoints(key, pre_processed_landmark_list, counter_obj, data_limit=1000)

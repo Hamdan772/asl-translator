@@ -60,32 +60,25 @@ def get_fps_log_image():
     return image
 
 
-def show_result(image, handedness, hand_sign_text):
+def show_result(image, handedness, hand_sign_text, confidence_text=""):
     """
     :param hand_sign_text: Detected sign
     :param handedness: Detected hand
     :param image: Result to draw
+    :param confidence_text: Confidence percentage string
     :return: Result image
     """
     #: Detecting hand
     hand = handedness.classification[0].label[0:]
 
-    #: Position of text
-    position = (00, 00)
-
     #: Check if hand sign is empty or not
-    #: Checking for right hand or left
     if hand_sign_text != "":
-        if hand == "Right":
-            position = (10, 80)
-            cv.putText(image, hand_sign_text, position, cv.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 6, cv.LINE_AA)
-            
-        elif hand == "Left":
-            position = (10, 80)
-            hand_sign_text = "Wrong Hand"
-            cv.putText(image, hand_sign_text, position, cv.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 3, cv.LINE_AA)
-            
-
+        # Draw the letter
+        cv.putText(image, hand_sign_text, (10, 80), cv.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 6, cv.LINE_AA)
+        
+        # Draw confidence percentage below the letter
+        if confidence_text != "":
+            cv.putText(image, confidence_text, (10, 115), cv.FONT_HERSHEY_SIMPLEX, 0.8, (80, 80, 80), 2, cv.LINE_AA)
 
     return image
 
