@@ -1,11 +1,28 @@
-.idea
-__pycache__
+# IDE
+.idea/
+.vscode/
 
-/.idea
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
 /data
 /static
 delete.*
-
 .env
-
 ss/
+
+# Model backups
+*.bak
+*.best.h5
