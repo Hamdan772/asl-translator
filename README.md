@@ -1,142 +1,281 @@
-<p align="center"><div align="center"><div align="center">
-
-  <img src="docs/logo.png" alt="SignSpeak" width="500">
-
-</p>
+# SignSpeak - ASL to Text & Speech<p align="center"><div align="center"><div align="center">
 
 
 
-<h1 align="center">ASL to Text & Speech Conversion</h1><img src="docs/logo.png" alt="SignSpeak" width="550"><img src="docs/logo.png" alt="SignSpeak Logo" width="500">
+![SignSpeak Logo](docs/logo.png)  <img src="docs/logo.png" alt="SignSpeak" width="500">
 
 
+
+**Real-time American Sign Language alphabet recognition powered by AI**</p>
+
+
+
+![Python](https://img.shields.io/badge/Python-3.8+-blue)
+
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.13-orange)
+
+![Accuracy](https://img.shields.io/badge/Accuracy-99.98%25-green)<h1 align="center">ASL to Text & Speech Conversion</h1><img src="docs/logo.png" alt="SignSpeak" width="550"><img src="docs/logo.png" alt="SignSpeak Logo" width="500">
+
+![License](https://img.shields.io/badge/License-MIT-yellow)
+
+
+
+---
 
 <p align="center">
+
+## What is SignSpeak?
 
   <b>Break communication barriers with AI-powered sign language recognition</b>
 
+SignSpeak uses your webcam and machine learning to instantly translate ASL hand gestures into text and speech. Hold a sign for 3 seconds and hear it spoken aloud!
+
 </p><br><br><br>
 
+![Demo](docs/result.png)
 
+
+
+---
 
 <p align="center">
+
+## Features
 
   <a href="https://python.org"><img src="https://img.shields.io/badge/Python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python"></a>
 
-  <a href="https://tensorflow.org"><img src="https://img.shields.io/badge/TensorFlow-2.13-FF6F00?style=flat-square&logo=tensorflow&logoColor=white" alt="TensorFlow"></a># ASL to Text & Speech Conversion[![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+- **Real-time Recognition** - 30+ FPS detection
 
-  <a href="https://mediapipe.dev"><img src="https://img.shields.io/badge/MediaPipe-0.10-00A67E?style=flat-square&logo=google&logoColor=white" alt="MediaPipe"></a>
+- **24 ASL Letters** - A-Y (J, Z require motion)  <a href="https://tensorflow.org"><img src="https://img.shields.io/badge/TensorFlow-2.13-FF6F00?style=flat-square&logo=tensorflow&logoColor=white" alt="TensorFlow"></a># ASL to Text & Speech Conversion[![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 
-  <a href="https://opencv.org"><img src="https://img.shields.io/badge/OpenCV-4.6-5C3EE8?style=flat-square&logo=opencv&logoColor=white" alt="OpenCV"></a>[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.13-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)](https://tensorflow.org)
+- **99.98% Accuracy** - Trained on 48,000+ samples
 
-  <img src="https://img.shields.io/badge/Accuracy-99.98%25-00C853?style=flat-square" alt="Accuracy">
+- **Text-to-Speech** - Hold sign 3 seconds to hear it  <a href="https://mediapipe.dev"><img src="https://img.shields.io/badge/MediaPipe-0.10-00A67E?style=flat-square&logo=google&logoColor=white" alt="MediaPipe"></a>
 
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="License"></a><p align="center">[![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10-00A67E?style=for-the-badge&logo=google&logoColor=white)](https://mediapipe.dev)
+- **Confidence Display** - Shows prediction certainty
 
-</p>
+- **Multi-Camera Support** - Switch cameras with 'C' key  <a href="https://opencv.org"><img src="https://img.shields.io/badge/OpenCV-4.6-5C3EE8?style=flat-square&logo=opencv&logoColor=white" alt="OpenCV"></a>[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.13-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)](https://tensorflow.org)
 
-  <b>Break communication barriers with AI-powered sign language recognition</b>[![OpenCV](https://img.shields.io/badge/OpenCV-4.6-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org)
 
-<p align="center">
 
-  <a href="#-features">Features</a> •</p>[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+---  <img src="https://img.shields.io/badge/Accuracy-99.98%25-00C853?style=flat-square" alt="Accuracy">
 
-  <a href="#-quick-start">Quick Start</a> •
 
-  <a href="#-usage">Usage</a> •[![Accuracy](https://img.shields.io/badge/Accuracy-99.98%25-success?style=for-the-badge)](/)
 
-  <a href="#-how-it-works">How It Works</a> •
+## Quick Start  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="License"></a><p align="center">[![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10-00A67E?style=for-the-badge&logo=google&logoColor=white)](https://mediapipe.dev)
 
-  <a href="#-training">Training</a><br>
 
-</p>
 
-<br>
+```bash</p>
 
----
+# Clone
 
-[![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
+git clone https://github.com/Hamdan772/asl-translator.git  <b>Break communication barriers with AI-powered sign language recognition</b>[![OpenCV](https://img.shields.io/badge/OpenCV-4.6-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org)
 
-## 🎯 What is SignSpeak?
-
-[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.13-FF6F00?style=flat-square&logo=tensorflow&logoColor=white)](https://tensorflow.org)**Real-time American Sign Language recognition powered by deep learning**
-
-**SignSpeak** is a real-time American Sign Language (ASL) alphabet recognition system that uses your webcam and machine learning to instantly translate hand gestures into text and speech.
-
-[![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10-00A67E?style=flat-square&logo=google&logoColor=white)](https://mediapipe.dev)
+cd asl-translator
 
 <p align="center">
 
-  <img src="docs/result.png" width="500" alt="Demo">[![OpenCV](https://img.shields.io/badge/OpenCV-4.6-5C3EE8?style=flat-square&logo=opencv&logoColor=white)](https://opencv.org)[🚀 Quick Start](#-quick-start) • [✨ Features](#-features) • [🎮 Usage](#-usage) • [🧠 How It Works](#-how-it-works) • [🏋️ Training](#%EF%B8%8F-training)
+# Setup
 
-</p>
+python -m venv .venv  <a href="#-features">Features</a> •</p>[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
 
-[![Accuracy](https://img.shields.io/badge/Accuracy-99.98%25-00C853?style=flat-square)](/)
+source .venv/bin/activate
+
+pip install -r requirements.txt  <a href="#-quick-start">Quick Start</a> •
+
+
+
+# Run  <a href="#-usage">Usage</a> •[![Accuracy](https://img.shields.io/badge/Accuracy-99.98%25-success?style=for-the-badge)](/)
+
+python app.py
+
+```  <a href="#-how-it-works">How It Works</a> •
+
+
+
+---  <a href="#-training">Training</a><br>
+
+
+
+## Controls</p>
+
+
+
+| Key | Action |<br>
+
+|-----|--------|
+
+| N | Prediction mode (default) |---
+
+| K | Logging mode (record data) |
+
+| C | Switch camera |[![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
+
+| 0-9 | Select letter class (logging) |
+
+| ESC | Exit |## 🎯 What is SignSpeak?
+
+
+
+---[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.13-FF6F00?style=flat-square&logo=tensorflow&logoColor=white)](https://tensorflow.org)**Real-time American Sign Language recognition powered by deep learning**
+
+
+
+## How It Works**SignSpeak** is a real-time American Sign Language (ASL) alphabet recognition system that uses your webcam and machine learning to instantly translate hand gestures into text and speech.
+
+
+
+```[![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10-00A67E?style=flat-square&logo=google&logoColor=white)](https://mediapipe.dev)
+
+Camera → MediaPipe (21 hand points) → TFLite Model → Text/Speech Output
+
+```<p align="center">
+
+
+
+1. OpenCV captures webcam frames  <img src="docs/result.png" width="500" alt="Demo">[![OpenCV](https://img.shields.io/badge/OpenCV-4.6-5C3EE8?style=flat-square&logo=opencv&logoColor=white)](https://opencv.org)[🚀 Quick Start](#-quick-start) • [✨ Features](#-features) • [🎮 Usage](#-usage) • [🧠 How It Works](#-how-it-works) • [🏋️ Training](#%EF%B8%8F-training)
+
+2. MediaPipe detects 21 hand landmarks
+
+3. Coordinates normalized to 42 features</p>
+
+4. TFLite model predicts letter + confidence
+
+5. Predictions below 70% filtered out[![Accuracy](https://img.shields.io/badge/Accuracy-99.98%25-00C853?style=flat-square)](/)
+
+6. Display result + optional TTS
 
 ---
+
+![Hand Landmarks](docs/hand-landmarks.png)
 
 [![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)---
 
+---
+
 ## ✨ Features
 
+## Supported Letters
 
 
-### 🔍 Recognition
+
+```
+
+A B C D E F G H I K L M N O P Q R S T U V W X Y### 🔍 Recognition
+
+```
 
 - **Real-time Detection** — 30+ FPS performance<br></div>
 
+J and Z require motion and are not supported.
+
 - **24 ASL Letters** — A-Y (excluding motion-based J, Z)
+
+---
 
 - **99.98% Accuracy** — Trained on 48,000+ samples
 
+## Project Structure
+
 - **Confidence Display** — See prediction certainty percentage
 
-[**Features**](#-features) · [**Quick Start**](#-quick-start) · [**Usage**](#-usage) · [**How It Works**](#-how-it-works) · [**Training**](#-training)## 🌟 Overview
+```
 
-### 🎙️ Output
+├── app.py              # Entry point[**Features**](#-features) · [**Quick Start**](#-quick-start) · [**Usage**](#-usage) · [**How It Works**](#-how-it-works) · [**Training**](#-training)## 🌟 Overview
 
-- **Text-to-Speech** — Hold sign for 3 seconds to hear it spoken
+├── train.py            # Training script
 
-- **Confidence Threshold** — Filter out low-confidence predictions (70% default)
+├── slr/### 🎙️ Output
 
-- **Visual Feedback** — Clean, intuitive UI<br>**SignSpeak** is an AI-powered application that bridges the communication gap between the deaf/hard-of-hearing community and the hearing world. Using your webcam, it recognizes American Sign Language (ASL) alphabet gestures in real-time and converts them to text — with optional text-to-speech output.
+│   ├── main.py         # Main app
 
-- **Multi-Camera** — Switch cameras with a keypress
+│   ├── model/- **Text-to-Speech** — Hold sign for 3 seconds to hear it spoken
 
+│   │   ├── classifier.py
 
+│   │   ├── slr_model.tflite- **Confidence Threshold** — Filter out low-confidence predictions (70% default)
 
-### 🎛️ Configurable Settings
+│   │   └── keypoint.csv
 
-<img src="docs/result.png" width="600" alt="Demo"><div align="center">
+│   └── utils/- **Visual Feedback** — Clean, intuitive UI<br>**SignSpeak** is an AI-powered application that bridges the communication gap between the deaf/hard-of-hearing community and the hearing world. Using your webcam, it recognizes American Sign Language (ASL) alphabet gestures in real-time and converts them to text — with optional text-to-speech output.
 
-| Setting | Default | Description |
+├── docs/
 
-|---------|---------|-------------|
+└── resources/- **Multi-Camera** — Switch cameras with a keypress
 
-| Confidence Threshold | 70% | Minimum confidence to display prediction |
-
-| TTS Hold Duration | 3 sec | Time to hold sign before speaking |</div>### 🎥 See It In Action
-
-| Camera Device | 0 | Default camera index |
+```
 
 
 
 ---
 
----| Live Recognition | Hand Landmark Detection |
+### 🎛️ Configurable Settings
 
-## 🚀 Quick Start
+## Training
 
-|:---:|:---:|
+<img src="docs/result.png" width="600" alt="Demo"><div align="center">
 
-### Prerequisites
+```bash
 
-## 🎯 What is SignSpeak?| <img src="docs/result.png" width="350"> | <img src="docs/hand-landmarks.png" width="350"> |
+# Collect data: Run app, press K, then number keys to log signs| Setting | Default | Description |
+
+python app.py
+
+|---------|---------|-------------|
+
+# Train model
+
+python train.py| Confidence Threshold | 70% | Minimum confidence to display prediction |
+
+```
+
+| TTS Hold Duration | 3 sec | Time to hold sign before speaking |</div>### 🎥 See It In Action
+
+**Model:** Dense(128) → Dense(64) → Dense(32) → Dense(24) with BatchNorm & Dropout
+
+| Camera Device | 0 | Default camera index |
+
+---
+
+
+
+## Tech Stack
+
+---
 
 - Python 3.8+
 
-- Webcam| *Instant letter prediction* | *21 keypoints tracked per hand* |
+- TensorFlow 2.13---| Live Recognition | Hand Landmark Detection |
 
-- macOS / Windows / Linux
+- MediaPipe 0.10
+
+- OpenCV 4.6## 🚀 Quick Start
+
+
+
+---|:---:|:---:|
+
+
+
+## License### Prerequisites
+
+
+
+MIT License## 🎯 What is SignSpeak?| <img src="docs/result.png" width="350"> | <img src="docs/hand-landmarks.png" width="350"> |
+
+
+
+---- Python 3.8+
+
+
+
+**Built by [Hamdan](https://github.com/Hamdan772)**- Webcam| *Instant letter prediction* | *21 keypoints tracked per hand* |
+
+
+
+⭐ Star this repo if it helped you!- macOS / Windows / Linux
+
 
 **SignSpeak** is a real-time American Sign Language (ASL) alphabet recognition system that uses your webcam and machine learning to instantly translate hand gestures into text and speech.
 
