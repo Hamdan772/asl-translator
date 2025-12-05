@@ -49,8 +49,8 @@
 </td>
 <td align="center" width="25%">
 <img width="60" src="https://cdn-icons-png.flaticon.com/512/4474/4474346.png"><br>
-<b>Both Hands</b><br>
-<sub>Left & right hand support</sub>
+<b>Right Hand</b><br>
+<sub>Optimized for right hand</sub>
 </td>
 <td align="center" width="25%">
 <img width="60" src="https://cdn-icons-png.flaticon.com/512/4926/4926526.png"><br>
@@ -69,6 +69,7 @@
 
 - 📷 **Multi-Camera Support** — Switch between cameras with a single keypress
 - 📝 **Data Logging Mode** — Record your own training data to improve the model
+- 📊 **Confidence Threshold** — Only shows predictions above 70% confidence
 - ⚡ **TFLite Optimized** — Lightweight model for fast inference
 - 🎨 **Clean UI** — Beautiful overlay with real-time feedback
 
@@ -161,6 +162,14 @@ python app.py
 
 > Works on **macOS** using the built-in `say` command. The letter won't repeat until you change signs.
 
+### 🎛️ Configurable Settings
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| **Confidence Threshold** | 70% | Predictions below this are filtered out |
+| **TTS Hold Duration** | 3 sec | Time to hold sign before speaking |
+| **Camera Device** | 0 | Default camera index |
+
 ---
 
 ## 🧠 How It Works
@@ -189,7 +198,8 @@ python app.py
 | 2️⃣ | **Detection** | MediaPipe identifies hand & extracts 21 3D landmarks |
 | 3️⃣ | **Preprocessing** | Landmarks normalized relative to wrist, flattened to 42 features |
 | 4️⃣ | **Inference** | TensorFlow Lite model classifies gesture in <10ms |
-| 5️⃣ | **Output** | Letter displayed on screen + optional TTS after hold |
+| 5️⃣ | **Filter** | Predictions below 70% confidence are filtered out |
+| 6️⃣ | **Output** | Letter + confidence displayed on screen, optional TTS after 3s hold |
 
 ---
 
